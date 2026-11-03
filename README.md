@@ -38,7 +38,7 @@ python cases/duct-demo/adapters/duct.py --case cases/duct-demo
 python cases/duct-demo/tools/mesh_export.py --case cases/duct-demo
 ```
 
-QFX 配置、独立回读、求解与场导出的后续命令见 [通用工作流入口](skills/cfd-case-workflow/SKILL.md)。正式模型使用 `--example custom`，根据实际几何与物理编写适配器。风扇需要先复制并填写 [环境配置模板](skills/freecad-gmsh-qflux/assets/environment.example.json)，具体见 [风扇运行说明](skills/freecad-gmsh-qflux/references/fan-example.md)。
+QFX 配置、独立回读、求解与场导出的后续命令见 [通用工作流入口](skills/cfd-case-workflow/SKILL.md)。正式模型使用 `--example custom`，根据实际几何与物理编写适配器。Codex 可选接入本机 QFlux MCP；安装注册、宿主检查和调用步骤见 [QFlux MCP 参考](skills/cfd-case-workflow/references/qflux-mcp.md)。风扇需要先复制并填写 [环境配置模板](skills/freecad-gmsh-qflux/assets/environment.example.json)，具体见 [风扇运行说明](skills/freecad-gmsh-qflux/references/fan-example.md)。
 
 ## 在其他电脑或智能体中复用
 

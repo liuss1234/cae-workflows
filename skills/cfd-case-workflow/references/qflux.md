@@ -4,6 +4,8 @@
 
 API 是独立进程，不是实时控制当前 GUI。需要用户观看操作时应明确说明，保存工程后在 GUI 打开；不能声称 API 脚本进行了界面点击。
 
+需要通过 Codex MCP 控制本机 GUI/`--lc` 宿主时，改读 [QFlux MCP 安装与使用](qflux-mcp.md)。MCP 宿主调用和本文件描述的独立 API 进程是两种执行路径，日志、状态确认与持久化验证不能相互冒充。
+
 Windows 实测官方 API 需要 CPython3.8 x64，普通建模用 Python3.11。启动时：
 
 ```python

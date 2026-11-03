@@ -13,6 +13,7 @@
 | 依赖 | 用途与要求 |
 |---|---|
 | TF-QFLUX | 有效安装与许可，包含 QSolver、官方 qfxPyApi 和 CGNS 库；Windows V2026/13.77.1 路径实测 |
+| QFlux MCP（可选） | 本机 QFLUX 安装提供的 `qflux-mcp.exe` 与 `qflux.exe --lc` 原生宿主；MCP 接入实测范围见 [QFlux MCP](qflux-mcp.md) |
 | QFlux API Python | 与厂商 `.pyd` ABI 一致，本机为 CPython 3.8.10 x64；不能拿普通 Python 3.11 强行导入 |
 | 普通 Python | 建议单独虚拟环境，脚本语法兼容 3.8+；实测 Python 3.11.9 |
 | Gmsh + Python API | OCC 建模、网格、命名；实测 4.14.1。只有 gmsh.exe 不等于 Python 可以 import gmsh |
@@ -21,7 +22,7 @@
 | FreeCAD | 可选，复杂 CAD 建模/几何清理/可视化；实测 1.1.1。直管自检使用 Gmsh 内置 OCC，不要求启动 GUI |
 | SSH/OpenSSH | 仅远程任务需要，使用接收电脑自己的安全连接配置 |
 
-通用 Python 工具适用于 Windows/Linux；**本包 QFlux 原生适配器仅实测 Windows**。Linux QFlux 的路径、ABI、命令和库需用其发行版重新核对，不能承诺复制 Windows DLL 即可工作。
+通用 Python 工具适用于 Windows/Linux；**本包 QFlux Python API 适配器仅实测 Windows**。Linux Slurm 的原生命令链路已在基础直管验证，见 [验证范围](validated-scope.md) 和 [远程运行](remote.md)；它独立于 Windows API 启动器。Linux 路径、ABI、命令和库仍需按目标发行版核对，不能复制 Windows DLL 使用。
 
 普通 Python 环境可按需安装：
 
@@ -68,3 +69,5 @@ python tools/probe_environment.py --case . --check-api --output checks/environme
 ```
 
 软件升级后至少复核 API 导入、单区 QFX 保存回读及所需高级设置的持久化；不要声称本机实测自动覆盖所有版本。
+
+选择 MCP 控制 QFlux 时，先按 [QFlux MCP 安装与使用](qflux-mcp.md)检查本机官方组件、Codex 配置和当前会话工具发现情况。MCP 是可选接入方式，不替代 QFlux API 环境检查，也不随技能包分发软件、许可证或 MCP 可执行文件。
