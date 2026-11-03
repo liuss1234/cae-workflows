@@ -1,0 +1,13 @@
+{
+  "build_python": "python",
+  "qflux_python": "",
+  "qflux_home": "",
+  "freecad_cmd": "",
+  "freecad_gui": "",
+  "gmsh_exe": "",
+  "extra_python_paths": [],
+  "cgns_library": "",
+  "cgns_index_bits": 64,
+  "qflux_platform_validated": "Windows",
+  "note": "填写本机软件位置；CGNS 索引位宽须与所选库一致。普通 Python 和 QFlux ABI 匹配的 Python 分开。"
+}

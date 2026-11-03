@@ -1,0 +1,4 @@
+interface:
+  display_name: "QFlux 液冷管路 CFD"
+  short_description: "液冷管路建模、米制网格、QFlux 本地或 SSH 求解及真实场后处理"
+  default_prompt: "使用 $qflux-liquid-cooling 建立并计算多支路液冷管路，输出压降、偏流统计和流速压力云图。"

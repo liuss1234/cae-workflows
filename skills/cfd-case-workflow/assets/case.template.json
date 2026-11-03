@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "name": "new_cfd_case",
+  "scenario": "custom",
+  "description": "由智能体根据用户几何和工况填写，未配置的物理量不得沿用历史案例。",
+  "geometry": {},
+  "physics": {},
+  "mesh": {"input_units": "m", "prism_layers": null, "grid_convergence_study": null},
+  "solver": {"cores": 2, "max_iterations": 1000, "save_interval": 200, "residual_limit": 0.00001},
+  "files": {"mesh_msh": "mesh/model_m.msh", "mesh_cgns": "mesh/model_m.cgns", "mesh_check": "checks/mesh.json", "regions": "regions.json", "qfx": "model.qfx"},
+  "validation": {
+    "bbox_tolerance_m": 1e-8,
+    "skewness_max_limit": null,
+    "aspect_ratio_max_limit": null,
+    "residual": null,
+    "mass_balance": null,
+    "monitors": [],
+    "energy_balance": null
+  },
+  "post": {"zones": [], "fields": []}
+}

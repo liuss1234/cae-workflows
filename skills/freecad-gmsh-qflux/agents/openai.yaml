@@ -1,0 +1,4 @@
+interface:
+  display_name: "FreeCAD–Gmsh–QFlux CFD 前处理"
+  short_description: "CAD 清理、流体域与旋转区、米制网格和 QFlux 边界识别验证"
+  default_prompt: "请用 $freecad-gmsh-qflux 处理当前模型，完成流体分区、网格、米制导出，并在 QFlux 核对全部边界名称。"

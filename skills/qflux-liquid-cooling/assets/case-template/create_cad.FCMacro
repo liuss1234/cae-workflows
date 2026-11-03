@@ -1,0 +1,31 @@
+# -*- coding: utf-8 -*-
+"""FreeCAD 原生建模；读取 SI 参数并转换为 FreeCAD 内部 mm。"""
+from pathlib import Path
+import json, traceback
+import FreeCAD as App
+import Part
+ROOT=Path(__file__).resolve().parent
+try:
+    config=json.loads((ROOT/'case_parameters.json').read_text(encoding='utf-8'))
+    doc=App.newDocument('EnergyStorageParallelCooling')
+    shapes=[]
+    for item in config['boxes']:
+        x,y,z,dx,dy,dz=[v*1000 for v in item['bounds']]
+        shape=Part.makeBox(dx,dy,dz,App.Vector(x,y,z));shapes.append(shape)
+        obj=doc.addObject('PartDesign::Feature',item['name']);obj.Label=item['name'];obj.Shape=shape
+        if App.GuiUp:
+            obj.ViewObject.ShapeColor=(.15,.5,.9) if 'header' in item['name'] else (.2,.8,.85)
+            obj.ViewObject.Transparency=25
+    fluid=shapes[0].multiFuse(shapes[1:]).removeSplitter()
+    if not fluid.isValid() or len(fluid.Solids)!=1:raise RuntimeError('流体必须为单一连通有效实体')
+    final=doc.addObject('PartDesign::Feature','fluid_network');final.Shape=fluid
+    if App.GuiUp:final.ViewObject.Visibility=False
+    doc.recompute();doc.saveAs(str(ROOT/'parallel_cooling.FCStd'))
+    Part.export([final],str(ROOT/'parallel_cooling.step'))
+    check={'unit':'mm (FreeCAD/STEP)','valid':fluid.isValid(),'solid_count':len(fluid.Solids),'volume_m3':fluid.Volume*1e-9,'bbox_m':[fluid.BoundBox.XLength/1000,fluid.BoundBox.YLength/1000,fluid.BoundBox.ZLength/1000]}
+    (ROOT/'cad_check.json').write_text(json.dumps(check,indent=2),encoding='utf-8')
+    if App.GuiUp:
+        Gui.activeDocument().activeView().viewAxonometric();Gui.activeDocument().activeView().fitAll()
+    print('CAD_COMPLETE',check,flush=True)
+except Exception:
+    (ROOT/'cad_error.txt').write_text(traceback.format_exc(),encoding='utf-8');raise

@@ -1,0 +1,43 @@
+---
+name: cfd-preprocessing
+description: "Plan and review CFD preprocessing for engineering simulations: geometry cleanup, domain decomposition, meshing, boundary regions, quality checks, and solver-ready handoff. Use when a user asks for CFD setup before solving, mesh strategy, preprocessing automation, or a mesh-quality/report review; do not use for post-processing-only requests."
+metadata:
+  short-description: CFD 几何、网格和边界区域前处理
+---
+
+# CFD 前处理
+
+## 目标
+
+将用户的几何、工况和研究目标转化为可执行、可审查的 CFD 前处理方案。默认保持求解器无关；只有用户明确指定 Fluent、OpenFOAM、STAR-CCM+ 等软件时，才采用其格式和术语。
+
+## 工作流程
+
+1. **界定问题与尺度**：确认流体/固体区域、稳态或瞬态、可压缩性、传热/组分/多相需求、特征长度、速度/质量流量、温度和压力范围，以及需要输出的物理量。若缺少关键数据，列出假设、影响和需要补充的信息，不要编造工况。
+2. **检查几何可用性**：识别重叠面、缝隙、非流体实体、短边/小面、非流形边、泄漏面和不必要的小特征；说明删除、合并、封堵或保留每类特征的理由。内部流动应明确流体体积，外部流动应明确远场/风洞域和阻塞比风险。
+3. **划分区域与命名**：建立 cell zone/region 与 boundary patch 的清单，使用稳定、可读、无空格的名称；说明入口、出口、壁面、对称面、周期面、界面、旋转区域和监测面。对共轭传热或旋转机械明确区域接口及守恒要求。
+4. **制定网格策略**：根据梯度、曲率、间隙、尾迹、边界层和局部尺度分配尺寸；选择结构化、非结构化、棱柱层、六面体、切割六面体或混合网格，并说明原因。给出全局尺寸、局部加密、增长率、层数、首层高度或目标 y+，以及粗/中/细三套网格的对比计划。
+5. **质量与物理一致性检查**：检查 skewness、非正交性、长宽比、最小体积、负体积、扭曲、棱柱层连续性和局部突变；同时检查质量流量方向、边界类型、区域连通性、单位、参考值和守恒路径。不得只给“网格合格”结论，应指出指标、位置、阈值来源或软件默认值的不确定性。
+6. **交付求解器就绪清单**：输出几何处理记录、区域/边界表、网格参数表、质量报告、假设与风险、网格无关性方案，以及导入目标求解器后的复核步骤。若用户需要脚本，优先生成可重复执行且带异常捕获的脚本，并说明依赖、输入格式和不会覆盖原始文件。
+
+## 决策规则
+
+- 壁面分辨率必须与湍流处理一致：低 y+ 壁面解析、壁函数和低雷诺数模型不能混用而不说明后果。
+- 几何特征尺寸小于局部网格尺度时，先判断它是否影响压降、换热、分离、泄漏或声学；不能仅因难划分而删除。
+- 网格质量阈值是求解器、单元类型和物理模型相关的工程判据，不把单一通用数值当作绝对标准；参考阈值与实际最差区域应同时报告。
+- 不能用残差下降替代守恒、监测量稳定和网格无关性；前处理方案应预先定义这些验收条件。
+- 对 CAD 清理、网格生成或格式转换等有破坏性的操作，先保留原始文件或输出到新目录，并明确文件覆盖范围。
+
+## 输出格式
+
+根据任务选择以下结构：
+
+- **方案设计**：目标与假设 → 几何处理 → 区域/边界 → 网格策略 → 质量指标 → 验收与风险。
+- **现有网格审查**：发现项（按严重性）→ 证据/位置 → 物理影响 → 修复建议 → 复核方法。
+- **自动化脚本**：输入/输出约定 → 环境依赖 → 脚本 → 运行命令 → 异常与回滚说明。
+
+涉及具体网格质量指标、y+、边界层和软件差异时，按需读取 [references/mesh-quality-and-yplus.md](references/mesh-quality-and-yplus.md)。
+
+需要对 STEP/IGES/BREP 做可重复的基础清理时，可使用 [scripts/clean_cad_geometry.py](scripts/clean_cad_geometry.py)。该脚本依赖 Gmsh OCC，默认不覆盖输入文件；运行前确认几何特征删除或保留决策已经得到工程确认。
+
+脚本的安装、参数和故障排查见 [references/clean-cad-geometry-guide.md](references/clean-cad-geometry-guide.md)。

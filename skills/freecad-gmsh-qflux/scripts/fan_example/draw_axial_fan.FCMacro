@@ -1,0 +1,444 @@
+# -*- coding: utf-8 -*-
+"""在 FreeCAD GUI 中连续绘制七叶轴流风扇，并保存原生模型、STEP 和预览。
+
+依赖：FreeCAD 1.1 自带 FreeCAD、Part、Sketcher、PySide，无额外安装。
+运行：用 FreeCAD 打开本宏并执行，或将本宏路径传给 freecad.exe。
+说明：这是演示建模方法的薄板叶片模型，叶型没有进行气动优化。
+"""
+
+from pathlib import Path
+import os
+import datetime
+import json
+import math
+import time
+import traceback
+
+import FreeCAD as App
+import Part
+import Sketcher
+
+
+# ======================= 可调参数（长度单位：mm） =======================
+OUTPUT_DIRECTORY = Path(os.environ["CFD_WORK_DIRECTORY"]) / "drawing"
+FRAME_SIZE = 140.0
+FRAME_DEPTH = 30.0
+CORNER_RADIUS = 8.0
+BORE_DIAMETER = 130.0
+MOUNT_PITCH = 124.0
+MOUNT_DIAMETER = 5.0
+HUB_DIAMETER = 40.0
+HUB_DEPTH = 20.0
+BLADE_COUNT = 7
+# 各截面依次为：半径、弦长、厚度、安装角（度）、切向后掠偏移。
+BLADE_SECTIONS = [
+    (17.0, 15.0, 2.4, 44.0, 0.0),
+    (31.0, 27.0, 2.1, 34.0, 0.0),
+    (46.0, 29.0, 1.8, 26.0, 3.0),
+    (59.0, 26.0, 1.5, 20.0, 8.0),
+]
+STEP_INTERVAL_MS = 0  # 不添加人为等待；下一步在本步结束后的 GUI 事件循环执行。
+FRAME_COLOR = (0.23, 0.27, 0.33)
+BLADE_COLOR = (0.12, 0.58, 0.78)
+HUB_COLOR = (0.89, 0.57, 0.19)
+MOTOR_COLOR = (0.35, 0.39, 0.43)
+MODE = globals().get("FAN_MODE", "demo")
+
+
+class FanBuilder:
+    """采用原生草图、拉伸、切割、放样及链接构建可编辑的装配。"""
+
+    def __init__(self):
+        self.started = time.perf_counter()
+        self.doc = App.newDocument("AxialFan_Demo")
+        self.doc.Label = "140 mm 七叶轴流风扇 · 连续建模"
+        self.parts = {}
+        self.sections = []
+        self.blades = []
+        self.log = []
+        self.final_parts = []
+        self.parameters = self.doc.addObject("App::FeaturePython", "Parameters")
+        self.parameters.Label = "00 尺寸参数（单位 mm）"
+        for name, value in (
+            ("FrameSize", FRAME_SIZE), ("FrameDepth", FRAME_DEPTH),
+            ("BoreDiameter", BORE_DIAMETER), ("MountPitch", MOUNT_PITCH),
+            ("MountDiameter", MOUNT_DIAMETER), ("HubDiameter", HUB_DIAMETER),
+            ("HubDepth", HUB_DEPTH),
+        ):
+            self.parameters.addProperty("App::PropertyLength", name, "Dimensions")
+            setattr(self.parameters, name, value)
+        self.frame_group = self.doc.addObject("App::Part", "FrameAssembly")
+        self.frame_group.Label = "01 机框与安装孔"
+        self.rotor_group = self.doc.addObject("App::Part", "RotorAssembly")
+        self.rotor_group.Label = "02 轮毂与七片扭转叶片"
+        self.support_group = self.doc.addObject("App::Part", "SupportAssembly")
+        self.support_group.Label = "03 电机与后支撑"
+        self.steps = [
+            ("绘制外框轮廓", "先建立圆角方框草图，外形为 140 × 140 mm。", self.outline),
+            ("拉伸机框毛坯", "将轮廓沿 Z 轴拉伸 30 mm，得到机框毛坯。", self.extrude_frame),
+            ("切出圆形风道", "用直径 130 mm 的圆柱进行布尔切割。", self.cut_bore),
+            ("钻四个安装孔", "四个直径 5 mm 的通孔，孔中心距 124 mm。", self.cut_mounts),
+            ("绘制轮毂草图", "在轴线上绘制直径 40 mm 的圆形草图。", self.hub_sketch),
+            ("拉伸轮毂", "拉伸 20 mm，形成叶片的中央轮毂。", self.hub_extrude),
+            ("建立叶根截面", "在半径 17 mm 处放置第一个叶片截面。", lambda: self.section(0)),
+            ("建立第二截面", "半径增大到 31 mm，弦长增大、安装角减小。", lambda: self.section(1)),
+            ("建立第三截面", "半径 46 mm，加入切向后掠，继续改变安装角。", lambda: self.section(2)),
+            ("建立叶尖截面", "半径 59 mm，安装角 20°，完成四个放样截面。", lambda: self.section(3)),
+            ("放样生成单片叶片", "连接四个闭合截面，形成实心扭转薄板叶片。", self.loft_blade),
+        ]
+        for index in range(1, BLADE_COUNT):
+            self.steps.append((
+                "圆周复制 · 叶片 %02d" % (index + 1),
+                "绕 Z 轴旋转 %.2f°，链接到原始叶片；源叶片修改会传递到副本。" % (360.0 * index / BLADE_COUNT),
+                lambda index=index: self.copy_blade(index),
+            ))
+        self.steps.extend([
+            ("添加轮毂锥罩", "建立中央锥罩，完成轮毂前部外形。", self.cap),
+            ("添加电机与后支撑", "添加后部电机壳及四根连接至机框的支撑臂。", self.supports),
+            ("检查并保存", "检查实体有效性，保存 FCStd、STEP 及预览。", self.finish),
+        ])
+
+    def style(self, obj, color, visible=True):
+        """在 GUI 中设置零件颜色；命令行验证时跳过显示设置。"""
+        if App.GuiUp:
+            obj.ViewObject.ShapeColor = color
+            obj.ViewObject.LineColor = (0.09, 0.11, 0.14)
+            obj.ViewObject.DisplayMode = "Flat Lines"
+            obj.ViewObject.Visibility = visible
+            obj.ViewObject.Deviation = 0.15
+
+    def hide(self, *objects):
+        """隐藏建模中间对象，保留完整特征历史。"""
+        if App.GuiUp:
+            for obj in objects:
+                obj.ViewObject.Visibility = False
+
+    def add(self, kind, name, label, group):
+        """新建并放入正确的装配分组。"""
+        obj = self.doc.addObject(kind, name)
+        obj.Label = label
+        group.addObject(obj)
+        return obj
+
+    def outline(self):
+        """用四段直线及四段相切圆弧构造闭合外框草图。"""
+        sk = self.add("Sketcher::SketchObject", "FrameOutline", "外框轮廓草图", self.frame_group)
+        half = FRAME_SIZE / 2.0
+        flat = half - CORNER_RADIUS
+        v = App.Vector
+        geometry = [
+            Part.LineSegment(v(-flat, -half, 0), v(flat, -half, 0)),
+            Part.ArcOfCircle(Part.Circle(v(flat, -flat, 0), v(0, 0, 1), CORNER_RADIUS), -math.pi/2, 0),
+            Part.LineSegment(v(half, -flat, 0), v(half, flat, 0)),
+            Part.ArcOfCircle(Part.Circle(v(flat, flat, 0), v(0, 0, 1), CORNER_RADIUS), 0, math.pi/2),
+            Part.LineSegment(v(flat, half, 0), v(-flat, half, 0)),
+            Part.ArcOfCircle(Part.Circle(v(-flat, flat, 0), v(0, 0, 1), CORNER_RADIUS), math.pi/2, math.pi),
+            Part.LineSegment(v(-half, flat, 0), v(-half, -flat, 0)),
+            Part.ArcOfCircle(Part.Circle(v(-flat, -flat, 0), v(0, 0, 1), CORNER_RADIUS), math.pi, 3*math.pi/2),
+        ]
+        sk.addGeometry(geometry, False)
+        sk.setExpression("Placement.Base.z", "-Parameters.FrameDepth / 2")
+        self.parts["outline"] = sk
+        if App.GuiUp:
+            sk.ViewObject.LineColor = (0.15, 0.8, 0.6)
+            sk.ViewObject.LineWidth = 3.0
+
+    def extrude(self, base, name, label, length_expression, group):
+        """沿草图法向 Z 方向生成实体拉伸，并保留长度表达式。"""
+        obj = self.add("Part::Extrusion", name, label, group)
+        obj.Base = base
+        obj.DirMode = "Normal"
+        obj.Solid = True
+        obj.setExpression("LengthFwd", length_expression)
+        self.doc.recompute()
+        self.hide(base)
+        return obj
+
+    def extrude_frame(self):
+        obj = self.extrude(self.parts["outline"], "FrameExtrusion", "机框拉伸 30 mm", "Parameters.FrameDepth", self.frame_group)
+        self.style(obj, FRAME_COLOR)
+        self.parts["frame_raw"] = obj
+
+    def cut_bore(self):
+        tool = self.add("Part::Cylinder", "BoreTool", "圆形风道切割体", self.frame_group)
+        tool.setExpression("Radius", "Parameters.BoreDiameter / 2")
+        tool.setExpression("Height", "Parameters.FrameDepth + 2 mm")
+        tool.setExpression("Placement.Base.z", "-Parameters.FrameDepth / 2 - 1 mm")
+        cut = self.add("Part::Cut", "FrameBore", "机框 · 圆形风道", self.frame_group)
+        cut.Base = self.parts["frame_raw"]
+        cut.Tool = tool
+        cut.Refine = True
+        self.doc.recompute()
+        self.hide(cut.Base, tool)
+        self.style(cut, FRAME_COLOR)
+        self.parts["frame_bore"] = cut
+
+    def cut_mounts(self):
+        cutters = []
+        for index, (sx, sy) in enumerate(((-1,-1), (1,-1), (1,1), (-1,1)), 1):
+            tool = self.add("Part::Cylinder", "MountTool%d" % index, "安装孔切割体 %d" % index, self.frame_group)
+            tool.setExpression("Radius", "Parameters.MountDiameter / 2")
+            tool.setExpression("Height", "Parameters.FrameDepth + 2 mm")
+            tool.setExpression("Placement.Base.x", "%d * Parameters.MountPitch / 2" % sx)
+            tool.setExpression("Placement.Base.y", "%d * Parameters.MountPitch / 2" % sy)
+            tool.setExpression("Placement.Base.z", "-Parameters.FrameDepth / 2 - 1 mm")
+            cutters.append(tool)
+        compound = self.add("Part::Compound", "MountTools", "四孔切割体", self.frame_group)
+        compound.Links = cutters
+        cut = self.add("Part::Cut", "FrameFinal", "机框 · 风道与四个安装孔", self.frame_group)
+        cut.Base = self.parts["frame_bore"]
+        cut.Tool = compound
+        cut.Refine = True
+        self.doc.recompute()
+        self.hide(cut.Base, compound, *cutters)
+        self.style(cut, FRAME_COLOR)
+        self.parts["frame"] = cut
+        self.final_parts.append(cut)
+
+    def hub_sketch(self):
+        sk = self.add("Sketcher::SketchObject", "HubSketch", "轮毂圆形草图", self.rotor_group)
+        sk.addGeometry(Part.Circle(App.Vector(), App.Vector(0,0,1), HUB_DIAMETER/2), False)
+        sk.addConstraint(Sketcher.Constraint("Coincident", 0, 3, -1, 1))
+        radius = sk.addConstraint(Sketcher.Constraint("Radius", 0, HUB_DIAMETER/2))
+        sk.setExpression("Constraints[%d]" % radius, "Parameters.HubDiameter / 2")
+        sk.setExpression("Placement.Base.z", "-Parameters.HubDepth / 2")
+        self.parts["hub_sketch"] = sk
+
+    def hub_extrude(self):
+        hub = self.extrude(self.parts["hub_sketch"], "Hub", "轮毂 · 圆形拉伸", "Parameters.HubDepth", self.rotor_group)
+        self.style(hub, HUB_COLOR)
+        self.parts["hub"] = hub
+        self.final_parts.append(hub)
+
+    def section(self, index):
+        """建立可编辑的闭合矩形截面，并赋予径向位置和安装角。"""
+        radius, chord, thickness, pitch, sweep = BLADE_SECTIONS[index]
+        sk = self.add("Sketcher::SketchObject", "BladeSection%d" % index, "叶片截面 %d · R%.0f / %.0f°" % (index+1, radius, pitch), self.rotor_group)
+        v = App.Vector
+        points = [v(-chord/2,-thickness/2,0), v(chord/2,-thickness/2,0), v(chord/2,thickness/2,0), v(-chord/2,thickness/2,0)]
+        sk.addGeometry([Part.LineSegment(points[i], points[(i+1)%4]) for i in range(4)], False)
+        for i in range(4):
+            sk.addConstraint(Sketcher.Constraint("Coincident", i, 2, (i+1)%4, 1))
+        for i in (0,2):
+            sk.addConstraint(Sketcher.Constraint("Horizontal", i))
+        for i in (1,3):
+            sk.addConstraint(Sketcher.Constraint("Vertical", i))
+        sk.addConstraint(Sketcher.Constraint("Distance", 0, chord))
+        sk.addConstraint(Sketcher.Constraint("Distance", 1, thickness))
+        sk.addConstraint(Sketcher.Constraint("DistanceX", 0, 1, -chord/2))
+        sk.addConstraint(Sketcher.Constraint("DistanceY", 0, 1, -thickness/2))
+        angle = math.radians(pitch)
+        u = v(0, math.cos(angle), math.sin(angle))
+        w = v(0, -math.sin(angle), math.cos(angle))
+        rotation = App.Rotation(u, w, v(1,0,0), "ZXY")
+        sk.Placement = App.Placement(v(radius, sweep, 0), rotation)
+        if App.GuiUp:
+            sk.ViewObject.LineColor = (0.05, 0.85, 0.5)
+            sk.ViewObject.LineWidth = 4.0
+        self.sections.append(sk)
+
+    def loft_blade(self):
+        blade = self.add("Part::Loft", "BladeMaster", "叶片 01 · 四截面实心放样", self.rotor_group)
+        blade.Sections = self.sections
+        blade.Solid = True
+        blade.Ruled = False
+        blade.Closed = False
+        self.doc.recompute()
+        self.hide(*self.sections)
+        self.style(blade, BLADE_COLOR)
+        self.blades.append(blade)
+        self.final_parts.append(blade)
+
+    def copy_blade(self, index):
+        """通过原生 App::Link 做圆周复制，保留与源叶片的关联。"""
+        link = self.add("App::Link", "BladeLink%02d" % (index+1), "叶片 %02d · 圆周链接" % (index+1), self.rotor_group)
+        link.setLink(self.blades[0])
+        link.LinkPlacement = App.Placement(App.Vector(), App.Rotation(App.Vector(0,0,1), 360.0*index/BLADE_COUNT))
+        self.doc.recompute()
+        self.blades.append(link)
+        self.final_parts.append(link)
+
+    def cap(self):
+        cap = self.add("Part::Cone", "HubCap", "轮毂前锥罩", self.rotor_group)
+        cap.setExpression("Radius1", "Parameters.HubDiameter / 2")
+        cap.Radius2 = 11.0
+        cap.Height = 6.0
+        cap.setExpression("Placement.Base.z", "Parameters.HubDepth / 2")
+        self.doc.recompute()
+        self.style(cap, HUB_COLOR)
+        self.final_parts.append(cap)
+
+    def supports(self):
+        motor = self.add("Part::Cylinder", "MotorHousing", "后置电机壳", self.support_group)
+        motor.Radius = 16.0
+        motor.Height = 16.0
+        motor.Placement.Base = App.Vector(0,0,-25)
+        self.style(motor, MOTOR_COLOR)
+        self.final_parts.append(motor)
+        for i in range(4):
+            arm = self.add("Part::Box", "SupportArm%d" % (i+1), "后支撑 %d" % (i+1), self.support_group)
+            arm.Length = 58.0
+            arm.Width = 7.0
+            arm.Height = 3.0
+            rotation = App.Rotation(App.Vector(0,0,1), 45.0 + i*90.0)
+            arm.Placement = App.Placement(rotation.multVec(App.Vector(12,-3.5,-14)), rotation)
+            self.style(arm, FRAME_COLOR)
+            self.final_parts.append(arm)
+
+    def verification(self):
+        """验证最终零件具有非空、有效的实体形状；不将示意叶型称为气动设计。"""
+        rows = []
+        for obj in self.final_parts:
+            shape = obj.Shape
+            rows.append({"name": obj.Name, "label": obj.Label, "valid": shape.isValid(), "solids": len(shape.Solids), "volume_mm3": shape.Volume})
+        if not rows or not all(row["valid"] and row["solids"] > 0 and row["volume_mm3"] > 0 for row in rows):
+            raise RuntimeError("存在空形状或无效实体：" + json.dumps(rows, ensure_ascii=False))
+        assembly = Part.makeCompound([obj.Shape for obj in self.final_parts])
+        box = assembly.BoundBox
+        return {"components": rows, "component_count": len(rows), "blade_count": len(self.blades), "all_shapes_valid": True, "bbox_mm": [box.XLength, box.YLength, box.ZLength], "note": "薄板扭转叶片建模示例，未进行气动优化或性能验证。"}
+
+    def finish(self):
+        self.doc.recompute()
+        report = self.verification()
+        OUTPUT_DIRECTORY.mkdir(parents=True, exist_ok=True)
+        if MODE == "validate":
+            (OUTPUT_DIRECTORY / "preflight.json").write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+            print("PREFLIGHT_OK " + json.dumps(report, ensure_ascii=False), flush=True)
+            return
+        suffix = ""
+        if (OUTPUT_DIRECTORY / "axial_fan_140mm.FCStd").exists():
+            suffix = "_" + datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        stem = "axial_fan_140mm" + suffix
+        fcstd = OUTPUT_DIRECTORY / (stem + ".FCStd")
+        step = OUTPUT_DIRECTORY / (stem + ".step")
+        preview = OUTPUT_DIRECTORY / (stem + ".png")
+        self.doc.recompute()
+        if App.GuiUp:
+            import FreeCADGui as Gui
+            Gui.Selection.clearSelection()
+            Gui.activeDocument().activeView().viewAxonometric()
+            Gui.activeDocument().activeView().fitAll()
+        self.doc.saveAs(str(fcstd))
+        import Import
+        Import.export(self.final_parts, str(step))
+        if App.GuiUp:
+            Gui.activeDocument().activeView().saveImage(str(preview), 1400, 1100, "White")
+        report["files"] = {"fcstd": str(fcstd), "step": str(step), "preview": str(preview)}
+        title, description, _ = self.steps[-1]
+        report["steps"] = self.log + [{"step": len(self.steps), "title": title, "description": description}]
+        report["step_interval_ms"] = STEP_INTERVAL_MS
+        report["elapsed_seconds"] = time.perf_counter() - self.started
+        report["macro"] = str(OUTPUT_DIRECTORY / "draw_axial_fan.FCMacro")
+        (OUTPUT_DIRECTORY / "demo_report.json").write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+        self.saved_path = fcstd
+
+    def run_step(self, index):
+        title, description, action = self.steps[index]
+        action()
+        self.doc.recompute()
+        self.log.append({"step": index+1, "title": title, "description": description})
+        if App.GuiUp:
+            import FreeCADGui as Gui
+            view = Gui.getDocument(self.doc.Name).activeView()
+            # 首尾适配视图；中间保持相机不动，减少缩放跳动和刷新开销。
+            if index == 0 or index == len(self.steps)-1:
+                view.fitAll()
+            else:
+                view.redraw()
+            Gui.getMainWindow().statusBar().showMessage("步骤 %d/%d：%s" % (index+1, len(self.steps), title))
+        print("FAN_STEP %d/%d %s" % (index+1, len(self.steps), title), flush=True)
+
+
+def launch_gui_demo():
+    """单次零延迟调度连续建模，既刷新 GUI，又避免回调重入。"""
+    import builtins
+    import FreeCADGui as Gui
+    from PySide import QtCore, QtGui
+    try:
+        from PySide import QtWidgets
+    except ImportError:
+        QtWidgets = QtGui
+
+    class DemoController:
+        def __init__(self):
+            self.builder = FanBuilder()
+            self.index = 0
+            self.failed = False
+            self.busy = False
+            main = Gui.getMainWindow()
+            main.showMaximized()
+            main.raise_()
+            Gui.activeDocument().activeView().viewAxonometric()
+            self.panel = QtWidgets.QDockWidget("风扇建模 · 连续执行", main)
+            self.panel.setObjectName("FanModelDemoPanel")
+            body = QtWidgets.QWidget()
+            layout = QtWidgets.QVBoxLayout(body)
+            self.title = QtWidgets.QLabel("准备开始：140 mm 七叶轴流风扇")
+            self.title.setWordWrap(True)
+            self.title.setStyleSheet("font-size:16px; font-weight:bold; padding:8px;")
+            self.description = QtWidgets.QLabel("连续执行建模，步骤之间不设置等待。")
+            self.description.setWordWrap(True)
+            self.progress = QtWidgets.QProgressBar()
+            self.progress.setRange(0, len(self.builder.steps))
+            self.history = QtWidgets.QTextEdit()
+            self.history.setReadOnly(True)
+            for widget in (self.title, self.description, self.progress, self.history):
+                layout.addWidget(widget)
+            self.panel.setWidget(body)
+            self.panel.setMinimumWidth(290)
+            main.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.panel)
+            self.panel.show()
+            self.timer = QtCore.QTimer(main)
+            self.timer.setSingleShot(True)
+            self.timer.timeout.connect(self.tick)
+            self.timer.start(STEP_INTERVAL_MS)
+
+        def tick(self):
+            """每次只执行一个建模操作，并记录可审计的进度。"""
+            # FreeCAD 重算可能处理 Qt 事件，防止定时回调重入而跳过建模步骤。
+            if self.busy or self.failed or self.index >= len(self.builder.steps):
+                return
+            self.busy = True
+            self.timer.stop()
+            try:
+                title, description, _ = self.builder.steps[self.index]
+                self.title.setText("%02d / %02d  %s" % (self.index+1, len(self.builder.steps), title))
+                self.description.setText(description)
+                self.builder.run_step(self.index)
+                self.history.append("%02d  %s" % (self.index+1, title))
+                self.index += 1
+                self.progress.setValue(self.index)
+                (OUTPUT_DIRECTORY / "demo_progress.json").write_text(json.dumps({"completed_steps": self.index, "total_steps": len(self.builder.steps), "last_step": title, "step_interval_ms": STEP_INTERVAL_MS, "elapsed_seconds": time.perf_counter()-self.builder.started}, ensure_ascii=False), encoding="utf-8")
+                if self.index == len(self.builder.steps):
+                    self.timer.stop()
+                    self.title.setText("20 / 20  建模完成")
+                    self.description.setText("已保存：\n" + str(self.builder.saved_path) + "\n可在左侧模型树展开草图、放样与圆周链接。")
+                else:
+                    self.timer.start(STEP_INTERVAL_MS)
+            except Exception:
+                self.failed = True
+                self.timer.stop()
+                message = traceback.format_exc()
+                self.description.setText("演示暂停：发生错误，已经生成的模型仍保留。")
+                self.history.append(message)
+                (OUTPUT_DIRECTORY / "demo_error.txt").write_text(message, encoding="utf-8")
+                App.Console.PrintError(message)
+            finally:
+                self.busy = False
+
+    OUTPUT_DIRECTORY.mkdir(parents=True, exist_ok=True)
+    previous = getattr(builtins, "_fan_demo_controller", None)
+    if previous is not None:
+        previous.timer.stop()
+        previous.panel.hide()
+    # 在解释器中保持引用，避免宏执行返回后定时器被回收。
+    builtins._fan_demo_controller = DemoController()
+
+
+if MODE == "validate" or not App.GuiUp:
+    builder = FanBuilder()
+    for step_index in range(len(builder.steps)):
+        builder.run_step(step_index)
+    App.closeDocument(builder.doc.Name)
+else:
+    launch_gui_demo()

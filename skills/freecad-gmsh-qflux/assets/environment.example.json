@@ -1,0 +1,11 @@
+{
+  "freecad_gui": "",
+  "freecad_cmd": "",
+  "gmsh_exe": "",
+  "gmsh_api": "",
+  "exchange_api": "",
+  "python_mesh": "",
+  "python_qflux": "",
+  "qflux_directory": "",
+  "blender_gui": ""
+}

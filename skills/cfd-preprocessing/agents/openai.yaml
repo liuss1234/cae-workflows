@@ -1,0 +1,7 @@
+interface:
+  display_name: "CFD 前处理"
+  short_description: "工程 CFD 几何、网格、边界区域与质量检查"
+  default_prompt: "请按 CFD 前处理流程分析我的几何与工况，输出可执行的建模、网格和质量检查方案。"
+
+policy:
+  allow_implicit_invocation: true

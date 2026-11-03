@@ -1,0 +1,4 @@
+interface:
+  display_name: "通用 CFD 案例工作流"
+  short_description: "从几何、网格到 QFlux 求解与验收的跨案例可迁移工作流"
+  default_prompt: "使用 $cfd-case-workflow 根据当前几何与工况完成 CFD 建模、分区网格、求解、验收和打包。"

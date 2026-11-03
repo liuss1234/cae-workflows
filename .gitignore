@@ -1,0 +1,34 @@
+# 本机配置、凭据及独立运行环境。
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+.venv*/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.idea/
+.vscode/
+
+# 案例和交付包通过显式清单在仓库外管理。
+/cases/
+/dist/
+/local/
+**/environment.json
+**/environment.local.json
+**/local-windows.json
+**/workflow.json
+*.log
+*.qfx
+*.dat
+*.cgns
+*.msh
+*.vtu
+*.vtm
+*.zip
+*.sha256
+*.FCStd1
+Thumbs.db
+.DS_Store

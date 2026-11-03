@@ -1,0 +1,196 @@
+# -*- coding: utf-8 -*-
+"""在当前 FreeCAD GUI 打开 CFD 结果，提供局部剖切、整域、旋转域和接口视图。
+
+只改变新建 CFD 文档的显示状态，保存为其自身文件，不修改原始风扇。
+依赖：FreeCAD 1.1 的 FreeCADGui、PySide；无需附加组件。
+"""
+# 本文件为七叶风扇参考实现；其他 CAD 必须重新映射零件与边界，不能直接套用。
+
+
+from pathlib import Path
+import os
+import builtins
+import json
+import traceback
+import FreeCAD as App
+import FreeCADGui as Gui
+import Part
+from PySide import QtCore, QtGui
+try:
+    from PySide import QtWidgets
+except ImportError:
+    QtWidgets = QtGui
+
+# =============================== 参数 ===============================
+WORK_DIRECTORY = Path(os.environ["CFD_WORK_DIRECTORY"]).resolve()  # 由运行器指定独立项目目录
+IMAGE_WIDTH = 1500
+IMAGE_HEIGHT = 1100
+FLUID_TRANSPARENCY = 38
+COLORS = {
+    "inlet": (0.18,0.52,0.88),
+    "rotating": (0.97,0.52,0.12),
+    "outlet": (0.10,0.65,0.56),
+    "rotor": (0.76,0.79,0.85),
+    "stator": (0.26,0.30,0.36),
+    "interface": (0.69,0.27,0.78),
+}
+
+
+class CFDViewer:
+    """保留按钮回调，便于用户在 FreeCAD 中切换检查各个区域。"""
+
+    def __init__(self):
+        latest = json.loads((WORK_DIRECTORY / "latest_output.json").read_text(encoding="utf-8"))
+        self.output = Path(latest["output_directory"])
+        self.file = Path(latest["fcstd"])
+        self.report = json.loads(Path(latest["report"]).read_text(encoding="utf-8"))
+        self.doc = next((d for d in App.listDocuments().values() if d.FileName and Path(d.FileName)==self.file),None)
+        if self.doc is None:
+            self.doc = App.openDocument(str(self.file))
+        App.setActiveDocument(self.doc.Name)
+        self.doc.Label = "风扇 CFD · 三流体区与旋转接口"
+        self.main = Gui.getMainWindow()
+        self.main.showMaximized()
+        self.main.raise_()
+        for dock in self.main.findChildren(QtWidgets.QDockWidget):
+            if dock.objectName() in ("FanModelDemoPanel", "FanCFDPanel"):
+                dock.hide()
+        self.configure_appearance()
+        self.add_panel()
+        self.mode("full")
+        self.save_image("fluid_domains_overview.png")
+        self.mode("rotating")
+        self.save_image("rotating_region.png")
+        self.mode("local")
+        self.save_image("cfd_local_cutaway.png")
+        self.doc.recompute()
+        self.doc.save()
+        (self.output / "gui_ready.json").write_text(json.dumps({"opened":True,"document":self.doc.Name,"file":str(self.file),"active_view":"local_cutaway","previews":[str(self.output/name) for name in ("fluid_domains_overview.png","rotating_region.png","cfd_local_cutaway.png")]},ensure_ascii=False,indent=2),encoding="utf-8")
+        App.Console.PrintMessage("CFD 几何已打开，可通过右侧面板切换视图。\n")
+
+    def configure_appearance(self):
+        """为真实几何和显示用剖切模型设置一致的区域配色。"""
+        # 只显示转子前半部与流体后半部，避免共用壁面在屏幕上产生闪烁斑纹。
+        # 此对象仅用于显示，真实转子和三个计算域始终保持原样。
+        front = self.doc.getObject("preview_rotor_front")
+        if front is None:
+            span = self.report["domain"]["diameter_mm"]
+            clip = Part.makeBox(2*span,span,2*span,App.Vector(-span,-span,-span))
+            front = self.doc.addObject("Part::Feature","preview_rotor_front")
+            front.Label = "preview_rotor_front"
+            front.Shape = self.doc.getObject("solid_rotor").Shape.common(clip).removeSplitter()
+            self.doc.getObject("PreviewOnly").addObject(front)
+            front.addProperty("App::PropertyString","Purpose","CFD")
+            front.Purpose = "转子前半剖切，仅用于显示，不能作为网格输入。"
+        for obj in self.doc.Objects:
+            if not hasattr(obj,"Shape") or not hasattr(obj.ViewObject,"ShapeColor"):
+                continue
+            obj.ViewObject.Visibility = False
+            obj.ViewObject.LineColor = (0.12,0.14,0.18)
+            obj.ViewObject.LineWidth = 1.0
+            obj.ViewObject.Deviation = 0.1
+            obj.ViewObject.DisplayMode = "Flat Lines"
+            name = obj.Name
+            if name.startswith("interface_"):
+                color = COLORS["interface"]
+                transparency = 25
+            elif "fluid_" in name:
+                color = COLORS["inlet"] if name.endswith("inlet") else (COLORS["outlet"] if name.endswith("outlet") else COLORS["rotating"])
+                transparency = FLUID_TRANSPARENCY
+            elif name in ("solid_rotor","preview_rotor_front"):
+                color,transparency = COLORS["rotor"],0
+            elif "stator" in name:
+                color,transparency = COLORS["stator"],0
+            else:
+                color,transparency = (0.7,0.72,0.75),60
+            obj.ViewObject.ShapeColor = color
+            obj.ViewObject.Transparency = transparency
+
+    def add_panel(self):
+        """显示关键尺寸、图例和视图按钮；不把计算参考包络误称为流体。"""
+        self.panel = QtWidgets.QDockWidget("风扇 CFD · 几何与区域", self.main)
+        self.panel.setObjectName("FanCFDPanel")
+        widget = QtWidgets.QWidget()
+        layout = QtWidgets.QVBoxLayout(widget)
+        title = QtWidgets.QLabel("CFD 几何准备完成")
+        title.setStyleSheet("font-size:18px;font-weight:bold;padding:8px;")
+        layout.addWidget(title)
+        d = self.report["domain"]
+        info = QtWidgets.QLabel(
+            "圆管内径：%.0f mm\n入口 +Z → 出口 −Z\n"
+            "入口延长 2D / 出口延长 5D\n"
+            "旋转区：z = %.2f ～ %.2f mm\n"
+            "叶尖间隙：%.3f mm\n"
+            "旋转轴：Z；转速待设" % (d["diameter_mm"],d["rotor_z_min_mm"],d["rotor_z_max_mm"],self.report["cleanup"]["tip_clearance_mm"])
+        )
+        info.setWordWrap(True)
+        layout.addWidget(info)
+        legend = QtWidgets.QLabel('<p><span style="color:#2e85e0">■ 蓝色：入口静止流体</span><br><span style="color:#f7851f">■ 橙色：旋转流体</span><br><span style="color:#19a68f">■ 绿色：出口静止流体</span><br><span style="color:#b047c7">■ 紫色：配对接口</span></p>')
+        layout.addWidget(legend)
+        for text, name in (
+            ("局部剖切 · 查看转子与流体", "local"),
+            ("完整流体域 · 三个区域", "full"),
+            ("单独查看旋转流体域", "rotating"),
+            ("转静接口 · 入口 / 出口两对", "interfaces"),
+            ("清理后的固体", "solids"),
+        ):
+            button = QtWidgets.QPushButton(text)
+            button.clicked.connect(lambda checked=False, name=name: self.mode(name))
+            layout.addWidget(button)
+        self.caption = QtWidgets.QLabel()
+        self.caption.setWordWrap(True)
+        self.caption.setStyleSheet("padding:8px;background:#eef2f6;color:#23303c;")
+        layout.addWidget(self.caption)
+        check = QtWidgets.QLabel("检查：3 个封闭、各自连通的流体实体\n体积交叠：0\n边界面：67 / 67 已归类\n两对接口面积匹配、法向相反\n\n旋转区内的管壁与电机壳须设置为绝对静止壁。")
+        check.setWordWrap(True)
+        layout.addWidget(check)
+        layout.addStretch()
+        self.panel.setWidget(widget)
+        self.panel.setMinimumWidth(315)
+        self.main.addDockWidget(QtCore.Qt.RightDockWidgetArea,self.panel)
+        self.panel.show()
+
+    def mode(self,name):
+        """按模式显隐对象；始终使用当前 CFD 文档的视图。"""
+        App.setActiveDocument(self.doc.Name)
+        for obj in self.doc.Objects:
+            if hasattr(obj,"Shape"):
+                obj.ViewObject.Visibility = False
+        if name == "full":
+            visible = ["fluid_stationary_inlet","fluid_rotating","fluid_stationary_outlet"]
+            caption = "完整计算流体域：蓝色入口区、橙色旋转区、绿色出口区。尺寸比例为真实比例。"
+        elif name == "rotating":
+            visible = ["fluid_rotating"]
+            caption = "实际旋转流体体积，已扣除叶片、轮毂及电机占据部分；不是实心圆柱包络。"
+        elif name == "interfaces":
+            visible = ["solid_rotor","interface_inlet_rotating","interface_outlet_rotating"]
+            caption = "显示接口的旋转侧；静止侧与其重合。上游为圆盘，下游为扣除电机截面的圆环。"
+        elif name == "solids":
+            visible = ["solid_rotor","solid_stator"]
+            caption = "转子与定子各一个实体；安装孔、外角圆角和内部干涉已清理。"
+        else:
+            visible = ["preview_rotor_front","preview_stator_cutaway","preview_fluid_stationary_inlet","preview_fluid_rotating","preview_fluid_stationary_outlet"]
+            caption = "风扇附近的半剖切预览，仅用于观察；完整流体域仍保存在“02 三个流体区域”中。"
+        for item in visible:
+            self.doc.getObject(item).ViewObject.Visibility = True
+        self.caption.setText(caption)
+        self.doc.recompute()
+        Gui.Selection.clearSelection()
+        view = Gui.getDocument(self.doc.Name).activeView()
+        eye = App.Vector(1,-1,0.75)
+        horizontal = App.Vector(1,1,0)
+        view.setCameraOrientation(App.Rotation(horizontal,App.Vector(0,0,1),eye,"ZXY").Q)
+        view.fitAll()
+        view.redraw()
+        self.main.statusBar().showMessage(caption)
+
+    def save_image(self,name):
+        """输出当前视图供审查，不截取用户其他桌面内容。"""
+        Gui.getDocument(self.doc.Name).activeView().saveImage(str(self.output/name),IMAGE_WIDTH,IMAGE_HEIGHT,"White")
+
+
+try:
+    builtins._fan_cfd_viewer = CFDViewer()
+except Exception:
+    (WORK_DIRECTORY / "gui_error.txt").write_text(traceback.format_exc(),encoding="utf-8")
+    App.Console.PrintError(traceback.format_exc())

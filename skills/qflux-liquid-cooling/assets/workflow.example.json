@@ -1,0 +1,11 @@
+{
+  "software": {"qflux_home": "", "qflux_python": "", "build_python": "", "freecad_exe": "", "extra_python_paths": []},
+  "geometry": {"branches": 8, "pitch_m": 0.09, "first_z_m": 0.06, "height_m": 0.75, "header_m": 0.016, "neck_m": 0.006, "neck_length_m": 0.06, "plate_length_m": 0.3, "plate_width_m": 0.02, "plate_gap_m": 0.003},
+  "operating": {"flow_lpm": 8.0, "temperature_C": 25.0, "density_kg_m3": 997.0, "viscosity_Pa_s": 0.00089, "outlet_gauge_pressure_Pa": 0.0},
+  "mesh": {"max_step_m": 0.006, "first_cell_m": 0.0003, "growth": 1.5},
+  "solver": {"mpi_cores": 4, "max_iterations": 10000, "save_interval": 500, "residual_limit": 0.000001, "momentum_scheme": "FirstUpwind", "pressure_relaxation": 0.25, "momentum_relaxation": 0.5, "turbulence_relaxation": 0.5},
+  "validation": {"mass_limit_percent": 0.01, "pressure_span_limit_percent": 0.1},
+  "post": {"font_path": "", "section_fractions": [0.25, 0.5, 0.75]},
+  "continuation": {"source_case": "parallel_cooling.qfx", "additional_iterations": 10000},
+  "remote": {"ssh_target": "", "case_directory": ""}
+}
