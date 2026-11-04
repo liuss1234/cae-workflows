@@ -43,3 +43,15 @@
 本机 TF-QFLUX 原生 MCP 服务已注册到 Codex，并通过 stdio JSON-RPC 完成 initialize/tools-list、宿主发现/选择、API 声明读取、Python 脚本调用，以及已完成 QFX/DAT 的设置回读和检测面导出。源工程和结果场哈希保持不变；场重构流量与同一最终场的基线重构值一致。
 
 该实测不包含通过 MCP 启动新求解，也不证明任意版本、网格导入或高级物理设置均已验证。可迁移安装命令和操作步骤见 [QFlux MCP 参考](../skills/cfd-case-workflow/references/qflux-mcp.md)。MCP 服务端、商业软件、许可证、本机路径及会话记录不纳入 GitHub 技能资源。
+
+## 吊扇试验技能
+
+新增模块的分层证据与适配边界见 [ceiling-fan-cfd发布验证](../skills/ceiling-fan-cfd/references/release-validation.md)。仓库检查包含该模块的命令行、迁移自检和独立打包；不自动运行商业网格或求解器。
+
+## 吊扇试验技能
+
+新增模块的分层证据与适配边界见 [ceiling-fan-cfd发布验证](../skills/ceiling-fan-cfd/references/release-validation.md)。仓库检查包含该模块的命令行、迁移自检和独立打包；不自动运行商业网格或求解器。
+
+## 吊扇试验技能
+
+新增模块的分层证据与适配边界见 [ceiling-fan-cfd发布验证](../skills/ceiling-fan-cfd/references/release-validation.md)。仓库检查包含该模块的命令行、迁移自检和独立打包；不自动运行商业网格或求解器。

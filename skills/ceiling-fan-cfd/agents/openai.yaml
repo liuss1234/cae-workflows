@@ -1,0 +1,4 @@
+interface:
+  display_name: "吊扇CFD试验与交付"
+  short_description: "吊扇几何保形清理、多面体边界层网格、MRF计算与可追溯交付"
+  default_prompt: "使用 $ceiling-fan-cfd 处理吊扇案例，继承已知工况，核对几何、边界层和QFlux工程并交付真实结果。"

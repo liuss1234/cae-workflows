@@ -1,0 +1,10 @@
+{
+  "python": "python",
+  "freecad_python": "<FreeCAD Python executable>",
+  "qflux_python": "<compatible CPython executable>",
+  "qflux_home": "<installed QFlux directory>",
+  "star_executable": "<installed STAR executable>",
+  "ssh_alias": null,
+  "remote_case_root": null,
+  "note": "仅在本机填写；不要上传连接凭据和许可证。"
+}

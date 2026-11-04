@@ -1,0 +1,118 @@
+{
+  "status": "setup_only",
+  "model": "example_fan",
+  "rpm": 180.0,
+  "mesh": {
+    "id": "example_mesh",
+    "version": "R01",
+    "source_cgns": "/absolute/new/fan.cgns",
+    "sha256": "replace-with-verified-mesh-sha256",
+    "cells": 0,
+    "zone_cells": {
+      "fluid_stationary": 0,
+      "fluid_rotating": 0
+    },
+    "zone_names_cells": {
+      "fluid_stationary_surfaces_m": 0,
+      "fluid_rotating_surfaces_m": 0
+    }
+  },
+  "files": {
+    "QFlux": "/absolute/new/fan.qfx"
+  },
+  "qflux_run": "/absolute/new/result",
+  "names": {
+    "QFlux": "example_fan_R01",
+    "rotor": "rotor_180rpm"
+  },
+  "physics": {
+    "omega_rad_s": -18.84955592153876,
+    "axis_origin_m": [
+      0.0,
+      0.0,
+      3.0
+    ],
+    "temperature_K": 298.15,
+    "reference_pressure_Pa": 101325.0,
+    "density_kg_m3": 1.184,
+    "viscosity_Pa_s": 1.849e-05,
+    "energy": false,
+    "gravity": false
+  },
+  "boundaries": [
+    "if_rotor_rot",
+    "if_rotor_stat",
+    "wall_blades",
+    "wall_ceiling",
+    "wall_fan_fixed_1",
+    "wall_fan_fixed_2",
+    "wall_floor",
+    "wall_hub",
+    "wall_inner_screen",
+    "wall_outer_screen"
+  ],
+  "rotating_wall_boundaries": [
+    "wall_blades",
+    "wall_hub"
+  ],
+  "measurement": {
+    "name": "measurement_signed_volume_flux",
+    "face_name": "customface",
+    "center_m": [
+      0.0,
+      0.0,
+      1.0
+    ],
+    "normal": [
+      0.0,
+      0.0,
+      -1.0
+    ],
+    "radius_m": 0.7,
+    "diameter_m": 1.4,
+    "height_above_floor_m": 1.0,
+    "diameter_offset_m": 0.8,
+    "mesh_size_m": 0.02
+  },
+  "solver": {
+    "cores": 4,
+    "max_iterations": 2000,
+    "save_interval": 200,
+    "initial_k_m2_s2": 0.00375,
+    "initial_epsilon_m2_s3": 0.00866430437576842,
+    "run_full_iterations": false
+  },
+  "default_relaxFactor": {
+    "pressure": {
+      "method": 0,
+      "value": 0.3,
+      "ddt": "Steady"
+    },
+    "momentum": {
+      "method": 1,
+      "value": 0.7
+    },
+    "energy": {
+      "method": 1,
+      "value": 1.0
+    },
+    "composition": {
+      "method": 1,
+      "value": 0.9
+    },
+    "turbulence": {
+      "method": 1,
+      "value": 0.8
+    },
+    "species": {
+      "method": 1,
+      "value": 0.9
+    },
+    "radiation": {
+      "method": 1,
+      "value": 1.0
+    },
+    "USlip": 0.01,
+    "UDS": {}
+  }
+}

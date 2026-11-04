@@ -10,7 +10,7 @@ import tempfile
 
 # 可调参数：仓库根目录由脚本位置推导，模块名称须与 skills 中的目录一致。
 REPOSITORY = Path(__file__).resolve().parents[1]
-WORKFLOWS = ("cfd-case-workflow", "cfd-preprocessing", "freecad-gmsh-qflux", "qflux-liquid-cooling")
+WORKFLOWS = ("cfd-case-workflow", "cfd-preprocessing", "freecad-gmsh-qflux", "qflux-liquid-cooling", "ceiling-fan-cfd")
 RESOURCE_SUFFIXES = {".md", ".py", ".ps1", ".json", ".yaml", ".yml", ".txt", ".FCMacro", ".FCStd"}
 PRIVATE_NAMES = {"environment.json", "environment.local.json", "local-windows.json", "workflow.json"}
 
@@ -21,7 +21,7 @@ def collect_resources(root):
     for path in sorted(root.rglob("*")):
         if not path.is_file() or "__pycache__" in path.parts:
             continue
-        if path.name in PRIVATE_NAMES or path.suffix not in RESOURCE_SUFFIXES:
+        if path.name in PRIVATE_NAMES or (path.suffix not in RESOURCE_SUFFIXES and not path.name.endswith(".java.in")):
             raise ValueError("技能目录含未分类或本机私有文件：" + str(path))
         resources.append(path.relative_to(root).as_posix())
     if "SKILL.md" not in resources:

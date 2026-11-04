@@ -1,0 +1,153 @@
+// \u7f16\u7801\u8bf4\u660e\uff1a\u8fd0\u884c\u526f\u672c\u8f6c\u4e3aGB18030\uff0c\u4ee5\u517c\u5bb9Windows\u7248STAR\u5b8f\u7f16\u8bd1\u5668\u3002
+package macro;
+import star.common.*;
+import star.base.neo.*;
+import star.meshing.*;
+import star.prismmesher.*;
+import star.dualmesher.*;
+import star.base.report.*;
+import java.util.*;
+import java.lang.reflect.*;
+import java.io.*;
+
+public class MeshCeilingFan extends StarMacro {
+  // \u53ef\u8c03\u53c2\u6570\u7edf\u4e00\u653e\u5728\u6b64\u5904\uff1b\u51e0\u4f55\u8f93\u5165\u4f7f\u7528\u7c73\u5236STL\uff0c\u5f53\u524d\u6b65\u9aa4\u53ea\u914d\u7f6e\u5e76\u68c0\u67e5\u7f51\u683c\u5de5\u5177\u3002
+  private static final String MESH="@@MESH_DIR@@";
+  private static final String LOG="@@LOG_DIR@@";
+
+  private double metric(Simulation s,Region r,String name,boolean minimum){
+    FieldFunction f=s.getFieldFunctionManager().getFunction(name);
+    if(minimum){MinReport q=s.getReportManager().createReport(MinReport.class);q.setFieldFunction(f);q.getParts().setObjects(r);return q.getReportMonitorValue();}
+    MaxReport q=s.getReportManager().createReport(MaxReport.class);q.setFieldFunction(f);q.getParts().setObjects(r);return q.getReportMonitorValue();
+  }
+  private void writeQuality(Simulation s){
+    try(PrintWriter out=new PrintWriter(new File(LOG+"/star_native_quality.json"),"UTF-8")){
+      out.println("{");int count=0;
+      for(Region r:s.getRegionManager().getRegions()){
+        if(count++>0)out.println(",");out.print("\""+r.getPresentationName()+"\":{");int fields=0;
+        for(String name:new String[]{"CellQuality","Volume","SkewnessAngle","CellAspectRatio","FaceValidity","VolumeChange"}){
+          double low=metric(s,r,name,true),high=metric(s,r,name,false);
+          if(!Double.isFinite(low)||!Double.isFinite(high))throw new RuntimeException("Nonfinite quality "+name);
+          if(name.equals("Volume")&&low<=0)throw new RuntimeException("Nonpositive volume");
+          if(fields++>0)out.print(",");out.printf(Locale.US,"\"%s\":{\"min\":%.14g,\"max\":%.14g}",name,low,high);
+          s.println("POLY_QUALITY "+r.getPresentationName()+" "+name+" min="+low+" max="+high);
+        }
+        out.print("}");
+        for(Boundary b:r.getBoundaryManager().getBoundaries()){
+          if(b.getPresentationName().startsWith("if_"))continue;
+          XyzInternalTable t=s.getTableManager().createTable(XyzInternalTable.class);t.getParts().setObjects(b);
+          t.setFieldFunctions(new NeoObjectVector(new Object[]{s.getFieldFunctionManager().getFunction("PrismLayerNumber"),s.getFieldFunctionManager().getFunction("FirstPrismLayerHeight")}));
+          t.extract();String zone=r.getPresentationName().contains("rotating")?"rot":"stat";
+          t.export(LOG+"/"+b.getPresentationName()+"_"+zone+"_native_layers.csv",",");
+        }
+      }
+      out.println("\n}");
+    }catch(Exception e){throw new RuntimeException(e);}
+  }
+
+  public void execute(){
+    Simulation s=getActiveSimulation();
+    Units m=(Units)s.getUnitsManager().getObject("m");
+    PartImportManager pm=s.get(PartImportManager.class);
+    for(String z:new String[]{"fluid_stationary","fluid_rotating"}) {
+      pm.importStlPart(MESH+"/"+z+"_surfaces_m.stl","OneSurfacePerPatch",m,true,1e-8);
+    }
+    Collection<GeometryPart> parts=s.get(SimulationPartManager.class).getLeafParts();
+    for(GeometryPart p:parts){
+      s.println("PART "+p.getPresentationName()+" "+p.getClass());
+      MeshPart mp=(MeshPart)p;
+      for(PartSurface ps:mp.getPartSurfaces())s.println("PATCH "+ps.getPresentationName());
+    }
+    s.getRegionManager().newRegionsFromParts(parts,"OneRegionPerPart","OneBoundaryPerPartSurface",false);
+    AutoMeshOperation op=s.get(MeshOperationManager.class).createAutoMeshOperation(
+      new StringVector(new String[]{"star.resurfacer.ResurfacerAutoMesher","star.dualmesher.DualAutoMesher","star.prismmesher.PrismAutoMesher"}),parts);
+    op.setPresentationName("Poly_Prism_Mesh");
+    // \u4e24\u4e2a\u7a7a\u6c14\u5206\u533a\u5171\u7528\u51e0\u4f55\u63a5\u53e3\uff0c\u4f46\u4e0d\u662f\u91cd\u53e0\u5b9e\u4f53\uff1b\u9010\u90e8\u4ef6\u7f51\u683c\u907f\u514d\u628a\u53cc\u4fa7\u63a5\u53e3\u5f53\u81ea\u4ea4\u3002
+    op.setMeshPartByPart(true);
+    op.setMeshInParallel(true);
+    for(Object am:op.getMeshers().getObjects())if(am instanceof DualAutoMesher){
+      DualAutoMesher tet=(DualAutoMesher)am;
+      tet.setParallelMeshing(true);tet.setTetOptimizeCycles(10);tet.setTetQualityThreshold(.01);
+      tet.setFixBadCells(true);tet.setOptimizeForDual(true);tet.setOptimizeBoundary(true);tet.setPostOptimize(true);
+    }
+    // \u964d\u4f4e\u8584\u5c42\u76f8\u5bf9\u6838\u5fc3\u5355\u5143\u7684\u9650\u5236\uff0c\u9632\u6b62\u5c0f\u5706\u89d2\u8584\u5c42\u88ab\u9ed8\u8ba4\u539a\u5ea6/\u957f\u5bbd\u6bd4\u9608\u503c\u6574\u7247\u56de\u7f29\u3002
+    for(Object am:op.getMeshers().getObjects())if(am instanceof PrismAutoMesher){
+      PrismAutoMesher prism=(PrismAutoMesher)am;
+      prism.setMinimumThickness(0.1);
+      prism.setNearCoreLayerAspectRatio(0.2);
+      prism.setLayerChoppingPercentage(20.0);
+    }
+    op.getDefaultValues().get(BaseSize.class).setValue(@@base_size_m@@);
+    op.getDefaultValues().get(NumPrismLayers.class).setNumLayers(1);
+    op.getDefaultValues().get(PrismLayerStretching.class).setStretching(@@growth@@);
+    op.getDefaultValues().get(PrismThickness.class).setAbsoluteSize(@@fixed_size_m@@,m);
+    SurfaceCustomMeshControl blade=op.getCustomMeshControls().createSurfaceControl();
+    blade.setPresentationName("blades_5_layers");
+    ArrayList<PartSurface> patches=new ArrayList<>();
+    for(GeometryPart p:parts)for(PartSurface ps:((MeshPart)p).getPartSurfaces())if(ps.getPresentationName().equals("wall_blades"))patches.add(ps);
+    blade.getGeometryObjects().setObjects(patches);
+    blade.getCustomConditions().get(PartsTargetSurfaceSizeOption.class).setSelected(PartsTargetSurfaceSizeOption.Type.CUSTOM);
+    blade.getCustomConditions().get(PartsMinimumSurfaceSizeOption.class).setSelected(PartsMinimumSurfaceSizeOption.Type.CUSTOM);
+    blade.getCustomValues().get(PartsTargetSurfaceSize.class).setAbsoluteSize(@@blade_size_m@@,m);
+    blade.getCustomValues().get(PartsMinimumSurfaceSize.class).setAbsoluteSize(@@blade_min_size_m@@,m);
+    PartsCustomizePrismMesh customize=blade.getCustomConditions().get(PartsCustomizePrismMesh.class);
+    customize.getCustomPrismOptions().setSelected(PartsCustomPrismsOption.Type.CUSTOMIZE);
+    customize.getCustomPrismControls().setCustomizeNumLayers(true);
+    customize.getCustomPrismControls().setCustomizeTotalThickness(true);
+    CustomPrismValuesManager bl=blade.getCustomValues().get(CustomPrismValuesManager.class);
+    bl.getNumPrismLayers().setNumLayers(@@blade_layers@@);
+    bl.getPrismThickness().setAbsoluteSize(@@blade_total_thickness_m@@,m);
+    // \u8f6e\u6bc2\u72ed\u5c0f\u5706\u89d2\u91c7\u7528\u66f4\u8584\u7684\u4e00\u5c42\uff0c\u907f\u514d4mm\u5916\u63a8\u5728\u6839\u90e8\u56de\u7f29\u3002
+    SurfaceCustomMeshControl hub=op.getCustomMeshControls().createSurfaceControl();hub.setPresentationName("hub_thin_1_layer");
+    patches=new ArrayList<>();
+    for(GeometryPart p:parts)for(PartSurface ps:((MeshPart)p).getPartSurfaces())if(ps.getPresentationName().equals("wall_hub"))patches.add(ps);
+    hub.getGeometryObjects().setObjects(patches);
+    hub.getCustomConditions().get(PartsTargetSurfaceSizeOption.class).setSelected(PartsTargetSurfaceSizeOption.Type.CUSTOM);
+    hub.getCustomConditions().get(PartsMinimumSurfaceSizeOption.class).setSelected(PartsMinimumSurfaceSizeOption.Type.CUSTOM);
+    hub.getCustomValues().get(PartsTargetSurfaceSize.class).setAbsoluteSize(@@hub_size_m@@,m);
+    hub.getCustomValues().get(PartsMinimumSurfaceSize.class).setAbsoluteSize(@@hub_thickness_m@@,m);
+    PartsCustomizePrismMesh hc=hub.getCustomConditions().get(PartsCustomizePrismMesh.class);
+    hc.getCustomPrismOptions().setSelected(PartsCustomPrismsOption.Type.CUSTOMIZE);
+    hc.getCustomPrismControls().setCustomizeTotalThickness(true);
+    hub.getCustomValues().get(CustomPrismValuesManager.class).getPrismThickness().setAbsoluteSize(@@hub_thickness_m@@,m);
+    // \u65cb\u8f6c\u63a5\u53e3\u5c5e\u4e8e\u5185\u90e8\u8026\u5408\u9762\uff0c\u4e0d\u6dfb\u52a0\u58c1\u9762\u68f1\u67f1\u5c42\u3002
+
+    // Preserve fixed support and hanging-rod features with a local 4 mm surface size.
+    SurfaceCustomMeshControl fixed=op.getCustomMeshControls().createSurfaceControl();
+    fixed.setPresentationName("fixed_supports_feature_preserve");
+    patches=new ArrayList<>();
+    for(GeometryPart p:parts)for(PartSurface ps:((MeshPart)p).getPartSurfaces())
+      if(ps.getPresentationName().equals("wall_fan_fixed"))patches.add(ps);
+    fixed.getGeometryObjects().setObjects(patches);
+    fixed.getCustomConditions().get(PartsTargetSurfaceSizeOption.class).setSelected(PartsTargetSurfaceSizeOption.Type.CUSTOM);
+    fixed.getCustomConditions().get(PartsMinimumSurfaceSizeOption.class).setSelected(PartsMinimumSurfaceSizeOption.Type.CUSTOM);
+    fixed.getCustomValues().get(PartsTargetSurfaceSize.class).setAbsoluteSize(@@fixed_size_m@@,m);
+    fixed.getCustomValues().get(PartsMinimumSurfaceSize.class).setAbsoluteSize(@@hub_thickness_m@@,m);
+    PartsCustomizePrismMesh fc=fixed.getCustomConditions().get(PartsCustomizePrismMesh.class);
+    fc.getCustomPrismOptions().setSelected(PartsCustomPrismsOption.Type.CUSTOMIZE);
+    fc.getCustomPrismControls().setCustomizeNumLayers(true);
+    fc.getCustomPrismControls().setCustomizeTotalThickness(true);
+    CustomPrismValuesManager fv=fixed.getCustomValues().get(CustomPrismValuesManager.class);
+    fv.getNumPrismLayers().setNumLayers(1);
+    fv.getPrismThickness().setAbsoluteSize(@@fixed_size_m@@,m);
+    SurfaceCustomMeshControl iface=op.getCustomMeshControls().createSurfaceControl();iface.setPresentationName("interface_no_prisms");
+    patches=new ArrayList<>();
+    for(GeometryPart p:parts)for(PartSurface ps:((MeshPart)p).getPartSurfaces())if(ps.getPresentationName().startsWith("if_rotor_"))patches.add(ps);
+    iface.getGeometryObjects().setObjects(patches);
+    iface.getCustomConditions().get(PartsTargetSurfaceSizeOption.class).setSelected(PartsTargetSurfaceSizeOption.Type.CUSTOM);
+    iface.getCustomConditions().get(PartsMinimumSurfaceSizeOption.class).setSelected(PartsMinimumSurfaceSizeOption.Type.CUSTOM);
+    iface.getCustomValues().get(PartsTargetSurfaceSize.class).setAbsoluteSize(@@interface_size_m@@,m);
+    iface.getCustomValues().get(PartsMinimumSurfaceSize.class).setAbsoluteSize(@@interface_min_size_m@@,m);
+    iface.getCustomConditions().get(PartsCustomizePrismMesh.class).getCustomPrismOptions().setSelected(PartsCustomPrismsOption.Type.DISABLE);
+    s.saveState(MESH+"/poly_setup.sim");
+    s.println("POLY_MESH_START");
+    op.execute();
+    s.saveState(MESH+"/poly_meshed.sim");
+    s.getImportManager().setExportOptionDataFormat(ImportManager.CGNS_HDF5);
+    s.getImportManager().setExportOptionSolutionOnly(false);
+    s.getImportManager().export(MESH+"/fan_poly_hdf_m.cgns",s.getRegionManager().getRegions(),Collections.<FieldFunction>emptyList(),Collections.<FieldFunction>emptyList(),false);
+    writeQuality(s);
+    s.saveState(MESH+"/poly_meshed.sim");
+    s.println("POLY_MESH_COMPLETE");
+  }
+}

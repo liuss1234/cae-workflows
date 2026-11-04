@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "case_id": "example_fan",
+  "units": {
+    "cad": "mm",
+    "mesh": "m"
+  },
+  "source": {},
+  "operating": {
+    "rpm": null,
+    "direction_viewed_from_plus_z": null,
+    "axis_origin_m": [
+      0.0,
+      0.0,
+      3.0
+    ]
+  },
+  "geometry": {
+    "swept_diameter_m": null,
+    "blade_reference_z_m": 3.0,
+    "hanger_diameter_m": null,
+    "cleaned_blade_reference_z_cad": null,
+    "rotor_radius_m": null,
+    "rotor_z_range_m": null,
+    "fixed_split_z_m": null
+  },
+  "room": {
+    "outer_width_m": 6.5,
+    "height_m": 4.0,
+    "inner_width_m": 4.5,
+    "screen_bottom_m": 0.45,
+    "screen_top_m": 3.0,
+    "screen_thickness_m": 0.01,
+    "top_aperture_diameter_m": 1.8,
+    "source": "project example; verify actual arrangement"
+  },
+  "measurement": {
+    "height_above_floor_m": 1.0,
+    "diameter_offset_m": 0.8,
+    "normal": [
+      0.0,
+      0.0,
+      -1.0
+    ],
+    "quantity": "signed_volume_flux"
+  },
+  "mesh": {
+    "core": "polyhedral",
+    "base_size_m": 0.12,
+    "blade_size_m": 0.003,
+    "blade_min_size_m": 0.001,
+    "blade_layers": 5,
+    "blade_total_thickness_m": 0.0012,
+    "growth": 1.2,
+    "fixed_size_m": 0.004,
+    "hub_size_m": 0.006,
+    "hub_thickness_m": 0.001,
+    "interface_size_m": 0.025,
+    "interface_min_size_m": 0.01
+  },
+  "fluid": {
+    "temperature_K": 298.15,
+    "density_kg_m3": 1.184,
+    "viscosity_Pa_s": 1.849e-05
+  },
+  "solver": {
+    "cores": 4,
+    "iterations": 2000,
+    "save_interval": 200,
+    "run_full_iterations": false
+  },
+  "acceptance": {
+    "flow_window": 200,
+    "flow_span_percent": 1.0,
+    "flow_minimum_scale_m3_s": 1e-06,
+    "blade_full_layer_min_fraction": null
+  },
+  "notes": [
+    "房间和网格参数为项目示例",
+    "转速、方向、扫掠直径及层覆盖验收值须明确填写"
+  ]
+}
