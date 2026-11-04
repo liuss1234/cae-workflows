@@ -1,4 +1,4 @@
-# QFLUX2026 · 可复用 CAE 工作流
+# cae-workflows · 可复用 CAE 工作流
 
 将本机已积累的 FreeCAD / Gmsh / TF-QFLUX 方法、脚本、参数模板及验证记录整理为四个独立技能包，支持复制到新电脑或新案例。当前内容以 CFD 前处理、水力计算和结果验收为主。
 
@@ -18,8 +18,8 @@
 以下命令从仓库根目录执行，路径同时适用于 PowerShell 和常见 Linux shell。案例放入被忽略的 `cases/`，避免提交生成结果。
 
 ```text
-git clone https://github.com/Liuss1234/QFLUX2026.git
-cd QFLUX2026
+git clone https://github.com/liuss1234/cae-workflows.git
+cd cae-workflows
 python -m venv .venv-cfd
 ```
 
