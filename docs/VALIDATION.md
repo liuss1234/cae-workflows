@@ -1,5 +1,13 @@
 # 验证范围
 
+## 技能同步与仓库检查 · 2026-11-05
+
+新增 `qflux-slurm` 可迁移技能，并同步几何前处理、FreeCAD/Gmsh/QFlux 和液冷技能的通用改进。`freecad-gmsh-qflux` 继续使用示例环境配置；本机路径配置、缓存和安装清单不进入仓库。
+
+`python tools/check_repository.py` 本次通过：7 个技能入口、60 个 Python/宏文件、9 个 JSON、8 个 YAML、80 个文档链接和 38 个命令行帮助入口均通过；两套风扇自检、案例初始化/拒绝覆盖及七个技能包 CRC/SHA256 回读通过。Slurm 检查使用合成输入验证目录准备、哈希和重复作业号保护，不调用 `sbatch`。QFlux Slurm 文档中的超算实测属于原有记录，本次没有重新运行超算或 CFD。
+
+更新范围内未发现用户目录路径、GitHub 凭据或 OneBrain 会话令牌。GitHub Actions 的远端结果需在推送后另行核对。
+
 ## 风扇行业技能 · 2026-11-05
 
 新增独立 `fan-cfd`，覆盖保形清理、流体域、STAR/Gmsh网格、实际层证据、QFlux多区多接口MRF配置与计算记录。实测与限制见 [fan-cfd验证记录](../skills/fan-cfd/references/validation.md)。仓库检查同时执行其合成逻辑自检、帮助入口和独立技能ZIP验证；不会自动运行商业求解器。
@@ -47,14 +55,6 @@
 本机 TF-QFLUX 原生 MCP 服务已注册到 Codex，并通过 stdio JSON-RPC 完成 initialize/tools-list、宿主发现/选择、API 声明读取、Python 脚本调用，以及已完成 QFX/DAT 的设置回读和检测面导出。源工程和结果场哈希保持不变；场重构流量与同一最终场的基线重构值一致。
 
 该实测不包含通过 MCP 启动新求解，也不证明任意版本、网格导入或高级物理设置均已验证。可迁移安装命令和操作步骤见 [QFlux MCP 参考](../skills/cfd-case-workflow/references/qflux-mcp.md)。MCP 服务端、商业软件、许可证、本机路径及会话记录不纳入 GitHub 技能资源。
-
-## 吊扇试验技能
-
-新增模块的分层证据与适配边界见 [ceiling-fan-cfd发布验证](../skills/ceiling-fan-cfd/references/release-validation.md)。仓库检查包含该模块的命令行、迁移自检和独立打包；不自动运行商业网格或求解器。
-
-## 吊扇试验技能
-
-新增模块的分层证据与适配边界见 [ceiling-fan-cfd发布验证](../skills/ceiling-fan-cfd/references/release-validation.md)。仓库检查包含该模块的命令行、迁移自检和独立打包；不自动运行商业网格或求解器。
 
 ## 吊扇试验技能
 

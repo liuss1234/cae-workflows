@@ -1,6 +1,8 @@
 ---
 name: freecad-gmsh-qflux
 description: "使用 FreeCAD/OCC 与 Gmsh 完成 CFD 几何清理、流体域及旋转区建立、分区网格和米制导出，并在本机 QFlux 验证全部网格区、边界名称与工程回读。用于 CAD 到 QFlux 的前处理、Gmsh 导入兼容和分区丢失问题；附七叶风扇可复现示例，不包含 CFD 求解或气动设计优化。"
+metadata:
+  version: "1.1.0"
 ---
 
 # FreeCAD → Gmsh → QFlux CFD 前处理
@@ -9,7 +11,7 @@ description: "使用 FreeCAD/OCC 与 Gmsh 完成 CFD 几何清理、流体域及
 
 ## 按任务选择资料
 
-- 首次运行或换电脑：读 [环境与软件职责](references/environment.md)，复制 `assets/environment.example.json` 到仓库外，填写本机路径后执行 `scripts/probe_environment.py --profile <配置文件> --check-imports`。不要将一台机器的路径和 Python ABI 当作其他电脑的默认值。
+- 首次运行或换电脑：读 [环境与软件职责](references/environment.md)，复制 `assets/environment.example.json` 到仓库外，填写目标电脑路径后执行 `scripts/probe_environment.py --profile <配置文件> --check-imports`。不要把一台机器的路径或 Python ABI 当作其他电脑的默认值。
 - 建模、几何清理、流体域或网格生成：读 [几何与网格流程](references/geometry-meshing.md)。涉及真实工况的网格策略时，结合可用的 `cfd-preprocessing` 技能；本技能自身包含必要的几何和命名验收约束。
 - 米制导出、QFlux 中只显示一个区或边界缺失：读 [QFlux 交付与检查](references/qflux-handoff.md)，使用通用检查工具 `scripts/qflux_handoff.py`。
 - 复现本次风扇或适配脚本：读 [七叶风扇示例与运行方法](references/fan-example.md)。`run_fan_example.py` 是这份特定风扇的运行器；其他零件需要重建零件映射、流体域方案及边界清单。
@@ -18,6 +20,7 @@ description: "使用 FreeCAD/OCC 与 Gmsh 完成 CFD 几何清理、流体域及
 
 1. 从当前文档建立独立快照，记录模型坐标单位、研究范围和需要保留/删除的几何特征。既有项目参数优先；未知转速、流量、压力、湍流与 y+ 不补猜测值。默认交付 m；输入单位必须有几何尺度或 CAD 元数据证据。
 2. 使用 FreeCAD/OCC 处理 STEP/实体布尔与封闭性。孔洞、槽、圆角、倒角和装配间隙按流动影响及用户指令决策；不能把“有缝”直接等同于坏几何。记录修改位置和体积/面积/最小间隙变化。
+   基础有效/封闭后仍需按风险检查 BOP 自交、曲面参数、补面外形与 STEP 独立回读；`removeSplitter()` 不等于去倒角。失败候选不能作为最终清理版，参见几何参考中的深度检查。
 3. 旋转流体域是包络扣除真实固体后的体积。参考包络与显示剖切体不进入体网格。检查区域无重叠、无遗漏、接口两侧面积一致和法向相反。
 4. 在 Gmsh 中显式创建 Physical Volume / Physical Surface，并检验全部流体边界均有名称。导入 STEP 或布尔运算后不沿用旧面编号；按邻接、面积、形心与曲面性质恢复标签。
 5. 默认保持已有网格，只在需要时重划。先检查正体积、重复单元、非流形、边界覆盖和接口邻接，再报告最差质量与位置。没有边界层时明确用途及限制。

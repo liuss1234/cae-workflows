@@ -16,7 +16,7 @@ from xml.etree import ElementTree
 
 # 可调检查参数：运行隔离在临时目录，子进程超时不影响实际 CFD 求解。
 REPOSITORY = Path(__file__).resolve().parents[1]
-WORKFLOWS = ("cfd-case-workflow", "cfd-preprocessing", "freecad-gmsh-qflux", "qflux-liquid-cooling", "ceiling-fan-cfd", "fan-cfd")
+WORKFLOWS = ("cfd-case-workflow", "cfd-preprocessing", "freecad-gmsh-qflux", "qflux-liquid-cooling", "ceiling-fan-cfd", "fan-cfd", "qflux-slurm")
 COMMAND_TIMEOUT_SECONDS = 60
 LINK_PATTERN = re.compile(r"\[[^\]]*\]\(([^)]+)\)")
 EXCLUDED_DIRECTORIES = {".git", ".venv", ".venv-cfd", "__pycache__", "cases", "dist", "local"}
@@ -27,6 +27,7 @@ CLI_ENTRIES = {
     "cfd-preprocessing": ("clean_cad_geometry",),
     "freecad-gmsh-qflux": ("probe_environment", "run_fan_example", "qflux_handoff"),
     "qflux-liquid-cooling": ("init_case", "probe_environment", "verify_case", "write_report", "package_skill", "package_delivery", "verify_package"),
+    "qflux-slurm": ("slurm_scaling",),
 }
 
 
@@ -140,6 +141,29 @@ def check_initialization(temporary):
         raise ValueError("风扇初始化拒绝覆盖时内容发生变化")
 
 
+def check_slurm_helpers(temporary):
+    """用合成输入验证 Slurm 准备与登记保护，不调用调度器。"""
+    source = REPOSITORY / "skills/qflux-slurm/scripts/slurm_scaling.py"
+    root = temporary / "slurm-scaling"
+    qfx = temporary / "synthetic.qfx"
+    template = temporary / "template.sh"
+    qfx.write_bytes(b"synthetic-qfx-input")
+    template.write_text("#!/usr/bin/env bash\nset -e\nmodule load qflux\n", encoding="utf-8")
+    run([source, "prepare", "--root", root, "--qfx", qfx, "--template", template,
+         "--partition", "test", "--cores", "2", "4", "--job-prefix", "smoke"])
+    manifest_path = root / "jobs.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    if len(manifest["runs"]) != 2 or manifest["source_qfx_sha256"] != hashlib.sha256(qfx.read_bytes()).hexdigest():
+        raise ValueError("Slurm 准备清单或工程哈希异常")
+    if any(not (root / run_info["directory"] / "submit.sh").is_file() for run_info in manifest["runs"]):
+        raise FileNotFoundError("Slurm 独立核数目录缺少提交脚本")
+    run([source, "register", "--root", root, "--cores", "2", "--job-id", "123456"])
+    before = hashlib.sha256(manifest_path.read_bytes()).hexdigest()
+    run([source, "register", "--root", root, "--cores", "2", "--job-id", "654321"], expected=1)
+    if hashlib.sha256(manifest_path.read_bytes()).hexdigest() != before:
+        raise ValueError("拒绝重复登记时 Slurm 清单发生变化")
+
+
 def main():
     """完成结构、命令行、初始化及可安装 ZIP 的回读检查，输出可审查的结果。"""
     argparse.ArgumentParser(description=__doc__).parse_args()
@@ -151,6 +175,8 @@ def main():
     with tempfile.TemporaryDirectory(prefix="cae-workflow-check-") as directory:
         temporary = Path(directory)
         check_initialization(temporary)
+        check_slurm_helpers(temporary)
+        report["slurm_prepare_register"] = "passed"
         run([REPOSITORY / "skills/ceiling-fan-cfd/scripts/self_test.py"])
         report["ceiling_fan_self_test"] = "passed"
         run([REPOSITORY / "skills/fan-cfd/scripts/self_test.py"])

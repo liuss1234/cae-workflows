@@ -1,6 +1,6 @@
 # cae-workflows · 可复用 CAE 工作流
 
-将本机已积累的 FreeCAD / Gmsh / TF-QFLUX 方法、脚本、参数模板及验证记录整理为六个独立技能包，支持复制到新电脑或新案例。当前内容以 CFD 前处理、水力计算、风扇行业流程和结果验收为主。
+将本机已积累的 FreeCAD / Gmsh / TF-QFLUX 方法、脚本、参数模板及验证记录整理为七个独立技能包，支持复制到新电脑或新案例。当前内容以 CFD 前处理、水力计算、风扇行业流程和结果验收为主。
 
 ## 工作流选择
 
@@ -12,6 +12,7 @@
 | [freecad-gmsh-qflux](skills/freecad-gmsh-qflux/SKILL.md) | FreeCAD→Gmsh→米制多区 CGNS→QFlux 回读 | 附七叶风扇 FCStd 和前处理脚本；不启动求解 |
 | [qflux-liquid-cooling](skills/qflux-liquid-cooling/SKILL.md) | 多支路液冷管路水力模板、求解和偏流统计 | 矩形流道演示；不自动包含共轭传热或真实冷板 |
 | [ceiling-fan-cfd](skills/ceiling-fan-cfd/SKILL.md) | 吊扇保形清理、内外屏试验室、Gmsh表面、STAR多面体/棱柱层、QFlux稳态MRF和检测量交付 | 七款案例经验参数化；新产品需重新标面/外形复核，商业API有版本限制 |
+| [qflux-slurm](skills/qflux-slurm/SKILL.md) | 复用目标超算 Slurm 脚本，隔离各核数工况、登记作业号并汇总运行证据 | 辅助工具不提交作业；多节点、GPU、混合 MPI/OpenMP 需单独适配 |
 
 各模块中的 `references/` 解释方法和验证范围，`scripts/` 提供工具，`assets/` 提供参数模板或示例输入。保留这些相对目录即可独立使用。
 
@@ -73,11 +74,21 @@ python skills/ceiling-fan-cfd/scripts/fan_case.py init --case cases/new-fan --so
 初始化后填写未知转速、转向、真实扫掠直径及层覆盖准入值，再执行 `fan_case.py validate --case cases/new-fan`。三目录、CAD/网格来源、MRF参考系、监控稳定与最终QFX/DAT按版本追溯。
 另附可自行生成的合成三叶几何，详见[迁移说明](skills/ceiling-fan-cfd/references/portability.md)；它用于安装/流程验证，不用于产品性能结论。实际软件和验证范围见[发布验证](skills/ceiling-fan-cfd/references/release-validation.md)。
 
+## QFlux Slurm 工作流
+
+安装 `skills/qflux-slurm/` 后，用 `$qflux-slurm` 调用。辅助脚本仅准备隔离目录、登记已返回的作业号和只读汇总，不调用 `sbatch`：
+
+```text
+python skills/qflux-slurm/scripts/slurm_scaling.py prepare --root cases/scaling --qfx cases/base.qfx --template cases/submit.sh --partition <实际分区> --cores 16 32 64 --job-prefix <作业前缀>
+```
+
+提交前按目标集群检查生成的 `submit.sh`，并使用 [Slurm 流程说明](skills/qflux-slurm/references/slurm-workflow.md)中的核验步骤。工具不负责提交，也不下载结果场。
+
 ## 在其他电脑或智能体中复用
 
 直接复制所需 `skills/<模块名>/` 到目标电脑的技能目录。Codex 默认目录为 Windows 的 `%USERPROFILE%/.codex/skills/` 或 Linux 的 `~/.codex/skills/`；设置了 `CODEX_HOME` 时使用其 `skills/` 子目录。重载后用 `$cfd-case-workflow` 等名称调用。其他智能体可先读取模块的 `SKILL.md`，再按阶段读取参考资料。
 
-也可生成六个可直接解压安装的 ZIP，每个包都有内容 SHA256 清单和 ZIP 校验：
+也可生成七个可直接解压安装的 ZIP，每个包都有内容 SHA256 清单和 ZIP 校验：
 
 ```text
 python tools/package_workflows.py --output dist/cae-workflows
@@ -92,7 +103,7 @@ python -m pip install -r requirements-dev.txt
 python tools/check_repository.py
 ```
 
-检查包含 Python/宏语法、JSON/YAML、技能元数据、相对文档链接、命令行入口、独立案例初始化、拒绝覆盖、风扇快照完整性以及打包后的 CRC/SHA256 回读。GitHub Actions 在 Windows 和 Linux 执行同一组检查，不启动商业求解器。
+检查包含 Python/宏语法、JSON/YAML、技能元数据、相对文档链接、命令行入口、独立案例初始化、拒绝覆盖、Slurm 目录准备/作业登记保护、风扇快照完整性以及打包后的 CRC/SHA256 回读。GitHub Actions 在 Windows 和 Linux 执行同一组检查，不启动商业求解器或提交超算作业。
 
 历史端到端证据与本次仓库检查分开记录，见 [验证范围](docs/VALIDATION.md)。通用 Python 工具可迁移；QFlux 原生 API/CGNS 链路仅实测 Windows。MRF、CHT、滑移、overset 等需要按目标软件与实际模型适配，基础链路验证不能代替这些物理场验证。
 

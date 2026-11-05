@@ -1,7 +1,7 @@
 ---
-name: qflux-liquid-cooling
-
-description: "使用 FreeCAD、Gmsh 和 TF-QFLUX 建立多支路液冷管路水力 CFD 案例，支持 Windows 本地或 SSH 求解、米制命名网格、原生工程回读、收敛核验及支路偏流后处理。附可配置演示脚本，不自动包含共轭换热或真实产品冷板结构。"
+name: qflux-liquid-coolingdescription: "使用 FreeCAD、Gmsh 和 TF-QFLUX 建立多支路液冷管路水力 CFD 案例，支持 Windows 本地或 SSH 求解、米制命名网格、原生工程回读、收敛核验及支路偏流后处理。附可配置演示脚本，不自动包含共轭换热或真实产品冷板结构。"
+metadata:
+  version: "1.1.0"
 ---
 
 # QFlux 液冷管路 CFD
@@ -13,6 +13,8 @@ description: "使用 FreeCAD、Gmsh 和 TF-QFLUX 建立多支路液冷管路水�
 - 换电脑或首次运行：读 [安装与依赖](references/installation.md)，执行 `scripts/probe_environment.py`。不沿用原电脑用户名、IP、软件目录或 Python ABI。
 - 建立案例：读 [建模与运行](references/workflow.md)，用 `scripts/init_case.py --output <新目录>` 生成独立工作副本；修改副本中的 `workflow.json`。模板不能原地运行。
 - 远程求解：读 [SSH 与进程管理](references/remote.md)。仅在用户已要求远程计算时传输/运行；目标主机和账号取本次用户配置。
+- Linux 超算：使用目标机器现有 Slurm 脚本；本机可用 `qflux-slurm` 时按其方式隔离提交与汇总。现有 `run_solver.ps1` 面向 Windows，不直接用于 Linux。
+- 与 STAR-CCM+/Fluent 对比时按相同工况、物性、统计口径和原生云图视角/色标复核；有 `cfd-case-workflow` 时按其 `references/solver-comparison.md` 执行。不把接口可用或软件已启动当作复算完成。
 - API 或运行失败：读 [QFlux API 经验](references/qflux-api.md)。仅以目标安装版本的公开 API、枚举和回读配置为依据。
 - 判断完成和交付：读 [验收与后处理](references/validation.md)。历史标杆见 [已验证算例](references/validated-example.md)，不能把标杆数值当成新算例结果。
 

@@ -1,4 +1,8 @@
-# SSH 远程 Windows 求解
+# SSH 远程求解
+
+先核对目标操作系统。以下 PowerShell 流程针对 Windows；Linux Slurm 使用现场原生 `uiToCore → partition → mpirun qcore` 脚本，本机可用 `qflux-slurm` 时按其单节点准备/登记/采集流程执行。`run_solver.ps1` 不能当 Linux 启动器。
+
+优先使用已有 SSH 别名，指纹异常先核对，不关闭校验或自动删除 known_hosts。作业号/PID、目录和日志用于识别既有任务，连接中断不等于任务失败，不盲目重投。结果下载服从用户要求，明确仅留远程时不拉回大场文件。
 
 用户要求远程计算才进行传输和远程进程启动；SSH 目标、账号和路径由当前任务提供。技能不携带账号、地址、密码、私钥、known_hosts 或厂商许可。
 
