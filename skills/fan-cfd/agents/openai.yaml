@@ -1,0 +1,4 @@
+interface:
+  display_name: "风扇行业 CFD"
+  short_description: "风机保形清理、流体分区、边界层网格及 QFlux MRF 计算与结果验收"
+  default_prompt: "使用 $fan-cfd，继承已确认工况完成这款风机的几何清理、网格和 QFlux 计算，并核对边界、风量与真实速度云图。"

@@ -1,11 +1,12 @@
 # cae-workflows · 可复用 CAE 工作流
 
-将本机已积累的 FreeCAD / Gmsh / TF-QFLUX 方法、脚本、参数模板及验证记录整理为五个独立技能包，支持复制到新电脑或新案例。当前内容以 CFD 前处理、水力计算和结果验收为主。
+将本机已积累的 FreeCAD / Gmsh / TF-QFLUX 方法、脚本、参数模板及验证记录整理为六个独立技能包，支持复制到新电脑或新案例。当前内容以 CFD 前处理、水力计算、风扇行业流程和结果验收为主。
 
 ## 工作流选择
 
 | 模块 | 用途 | 使用边界 |
 |---|---|---|
+| [fan-cfd](skills/fan-cfd/SKILL.md) | 风扇行业入口：几何清理、流体分区、STAR/Gmsh网格、实际边界层、QFlux MRF计算及风量/云图交付 | 单转子多区多接口适配，具备独立回读与求解证据；具体几何、网格器版本及物理有效性需本案例验证 |
 | [cfd-case-workflow](skills/cfd-case-workflow/SKILL.md) | 推荐入口：几何、网格、QFX、求解、场导出、验收和打包 | 自动设置限单流体稳态等温；附直管安装自检 |
 | [cfd-preprocessing](skills/cfd-preprocessing/SKILL.md) | 几何清理、区域命名、网格/y+ 策略与质量审查 | 不包含求解及后处理 |
 | [freecad-gmsh-qflux](skills/freecad-gmsh-qflux/SKILL.md) | FreeCAD→Gmsh→米制多区 CGNS→QFlux 回读 | 附七叶风扇 FCStd 和前处理脚本；不启动求解 |
@@ -41,6 +42,21 @@ python cases/duct-demo/tools/mesh_export.py --case cases/duct-demo
 
 QFX 配置、独立回读、求解与场导出的后续命令见 [通用工作流入口](skills/cfd-case-workflow/SKILL.md)。正式模型使用 `--example custom`，根据实际几何与物理编写适配器。Codex 可选接入本机 QFlux MCP；安装注册、宿主检查和调用步骤见 [QFlux MCP 参考](skills/cfd-case-workflow/references/qflux-mcp.md)。风扇需要先复制并填写 [环境配置模板](skills/freecad-gmsh-qflux/assets/environment.example.json)，具体见 [风扇运行说明](skills/freecad-gmsh-qflux/references/fan-example.md)。
 
+## 风扇行业技能
+
+安装 `skills/fan-cfd/` 后，用 `$fan-cfd` 调用，例如：
+
+> 使用 $fan-cfd，依据这款风机的STEP清理几何，保留外框内壁和真实叶型，建立进出口、静止和旋转流体域；按已确认参数生成边界层网格，在QFlux核对全部边界和MRF后计算，输出真实风量及横向速度云图。
+
+技能包含独立参数模板、CAD只读检查、线性混合CGNS导出、实际层证据准入、QFlux配置/独立回读、单阶段求解启动和监控统计。STAR多面体及Gmsh三维层的操作与限制见[网格说明](skills/fan-cfd/references/meshing.md)。
+
+```text
+python skills/fan-cfd/scripts/self_test.py
+python skills/fan-cfd/scripts/fan_case.py init --case cases/new-fan --source input/fan.step
+```
+
+未知工况保留null，填写后再配置/计算。小型四区合成安装检查与真实验证范围见[fan-cfd发布验证](skills/fan-cfd/references/validation.md)。不需要安装其他CFD技能即可使用。
+
 ## 吊扇测试经验技能
 
 安装 `skills/ceiling-fan-cfd/` 后，用 `$ceiling-fan-cfd` 调用；例如：
@@ -61,7 +77,7 @@ python skills/ceiling-fan-cfd/scripts/fan_case.py init --case cases/new-fan --so
 
 直接复制所需 `skills/<模块名>/` 到目标电脑的技能目录。Codex 默认目录为 Windows 的 `%USERPROFILE%/.codex/skills/` 或 Linux 的 `~/.codex/skills/`；设置了 `CODEX_HOME` 时使用其 `skills/` 子目录。重载后用 `$cfd-case-workflow` 等名称调用。其他智能体可先读取模块的 `SKILL.md`，再按阶段读取参考资料。
 
-也可生成五个可直接解压安装的 ZIP，每个包都有内容 SHA256 清单和 ZIP 校验：
+也可生成六个可直接解压安装的 ZIP，每个包都有内容 SHA256 清单和 ZIP 校验：
 
 ```text
 python tools/package_workflows.py --output dist/cae-workflows

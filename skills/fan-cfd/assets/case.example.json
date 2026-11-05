@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "name": "new-fan",
+  "profile": "open_fan",
+  "source": {"file": null, "sha256": null},
+  "geometry": {"diameter_m": null, "axis_origin_m": [0.0, 0.0, 0.0]},
+  "mesh": {
+    "file": "02_mesh/mesh.cgns", "sha256": null,
+    "zones": {
+      "in": {"cells": null, "bbox_m": null},
+      "out": {"cells": null, "bbox_m": null},
+      "stator": {"cells": null, "bbox_m": null},
+      "rotor": {"cells": null, "bbox_m": null}
+    },
+    "bbox_tolerance_m": null,
+    "limits": {"min_volume_m3": 0.0, "max_nonorth_deg": null, "max_volume_error_fraction": null},
+    "layer_groups": [
+      {"name": "fan_surfaces", "boundaries": ["blade_wall", "frame_rotor_wall", "stator_wall"], "requested_layers": null, "first_height_m": null, "total_thickness_m": null, "growth": null, "minimum_full_layer_area_fraction": null},
+      {"name": "other_walls", "boundaries": ["duct_wall"], "requested_layers": null, "first_height_m": null, "total_thickness_m": null, "growth": null, "minimum_full_layer_area_fraction": null}
+    ]
+  },
+  "boundaries": {
+    "pressure_in": {"zone": "in", "kind": "pressure_inlet", "pressure_Pa": 0.0},
+    "in_side": {"zone": "in", "kind": "interface"},
+    "rotor_in_side": {"zone": "rotor", "kind": "interface"},
+    "blade_wall": {"zone": "rotor", "kind": "wall", "frame": "rotating"},
+    "frame_rotor_wall": {"zone": "rotor", "kind": "wall", "frame": "global"},
+    "rotor_out_side": {"zone": "rotor", "kind": "interface"},
+    "stator_in_side": {"zone": "stator", "kind": "interface"},
+    "stator_wall": {"zone": "stator", "kind": "wall", "frame": "global"},
+    "stator_out_side": {"zone": "stator", "kind": "interface"},
+    "out_side": {"zone": "out", "kind": "interface"},
+    "duct_wall": {"zone": "out", "kind": "wall", "frame": "global"},
+    "pressure_out": {"zone": "out", "kind": "pressure_outlet", "pressure_Pa": 0.0}
+  },
+  "interface_pairs": [["in_side", "rotor_in_side"], ["rotor_out_side", "stator_in_side"], ["stator_out_side", "out_side"]],
+  "rotation": {"zone": "rotor", "axis_unit": [0.0, 0.0, 1.0], "rpm": null, "omega_rad_s": null, "view_direction_unit": null, "sense_from_view": null},
+  "physics": {"density_kg_m3": null, "viscosity_Pa_s": null, "temperature_K": null, "reference_pressure_Pa": null, "energy": false, "gravity": false, "turbulence_adapter": "KE-native2-wall3"},
+  "solver": {"cores": null, "max_iterations": null, "save_interval": null, "momentum_scheme": null, "nonorth_corrections": null, "relaxation": {"pressure": null, "momentum": null, "turbulence": null}, "initial_k_m2_s2": null, "initial_epsilon_m2_s3": null, "initial_velocity_m_s": [0.0, 0.0, 0.0], "reference_position_m": [0.0, 0.0, 0.0]},
+  "files": {"qfx": "03_solve/R01/setup.qfx", "run": "03_solve/R01/run"}
+}

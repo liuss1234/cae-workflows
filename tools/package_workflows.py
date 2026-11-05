@@ -10,7 +10,7 @@ import tempfile
 
 # 可调参数：仓库根目录由脚本位置推导，模块名称须与 skills 中的目录一致。
 REPOSITORY = Path(__file__).resolve().parents[1]
-WORKFLOWS = ("cfd-case-workflow", "cfd-preprocessing", "freecad-gmsh-qflux", "qflux-liquid-cooling", "ceiling-fan-cfd")
+WORKFLOWS = ("cfd-case-workflow", "cfd-preprocessing", "freecad-gmsh-qflux", "qflux-liquid-cooling", "ceiling-fan-cfd", "fan-cfd")
 RESOURCE_SUFFIXES = {".md", ".py", ".ps1", ".json", ".yaml", ".yml", ".txt", ".FCMacro", ".FCStd"}
 PRIVATE_NAMES = {"environment.json", "environment.local.json", "local-windows.json", "workflow.json"}
 

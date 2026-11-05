@@ -16,11 +16,12 @@ from xml.etree import ElementTree
 
 # 可调检查参数：运行隔离在临时目录，子进程超时不影响实际 CFD 求解。
 REPOSITORY = Path(__file__).resolve().parents[1]
-WORKFLOWS = ("cfd-case-workflow", "cfd-preprocessing", "freecad-gmsh-qflux", "qflux-liquid-cooling", "ceiling-fan-cfd")
+WORKFLOWS = ("cfd-case-workflow", "cfd-preprocessing", "freecad-gmsh-qflux", "qflux-liquid-cooling", "ceiling-fan-cfd", "fan-cfd")
 COMMAND_TIMEOUT_SECONDS = 60
 LINK_PATTERN = re.compile(r"\[[^\]]*\]\(([^)]+)\)")
 EXCLUDED_DIRECTORIES = {".git", ".venv", ".venv-cfd", "__pycache__", "cases", "dist", "local"}
 CLI_ENTRIES = {
+    "fan-cfd": ("fan_case", "cad_audit", "export_cgns", "create_smoke_case", "qflux_adapter", "run_solver", "analyze_history", "self_test"),
     "ceiling-fan-cfd": ("fan_case", "analyze_history", "cad_audit", "build_room_domain", "gmsh_surfaces", "render_star_macro", "check_poly_mesh", "make_qflux_config", "qflux_adapter", "create_synthetic_case"),
     "cfd-case-workflow": ("init_case", "probe_environment", "mesh_export", "qflux_case", "run_solver", "solution_check", "plot_vtu", "package_artifacts"),
     "cfd-preprocessing": ("clean_cad_geometry",),
@@ -152,6 +153,8 @@ def main():
         check_initialization(temporary)
         run([REPOSITORY / "skills/ceiling-fan-cfd/scripts/self_test.py"])
         report["ceiling_fan_self_test"] = "passed"
+        run([REPOSITORY / "skills/fan-cfd/scripts/self_test.py"])
+        report["fan_cfd_self_test"] = "passed"
         output = temporary / "packages"
         run([REPOSITORY / "tools/package_workflows.py", "--output", output])
         packer = REPOSITORY / "skills/cfd-case-workflow/scripts/package_artifacts.py"
