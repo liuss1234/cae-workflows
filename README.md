@@ -7,7 +7,7 @@
 | 模块 | 用途 | 使用边界 |
 |---|---|---|
 | [fan-cfd](skills/fan-cfd/SKILL.md) | 风扇行业入口：几何清理、流体分区、STAR/Gmsh网格、实际边界层、QFlux MRF计算及风量/云图交付 | 单转子多区多接口适配，具备独立回读与求解证据；具体几何、网格器版本及物理有效性需本案例验证 |
-| [cfd-case-workflow](skills/cfd-case-workflow/SKILL.md) | 推荐入口：几何、网格、QFX、求解、场导出、验收和打包 | 自动设置限单流体稳态等温；附直管安装自检 |
+| [cfd-case-workflow](skills/cfd-case-workflow/SKILL.md) | 推荐入口：几何、网格、QFX、VOF/UDF 初始相、求解、场导出、验收和打包 | 自动设置限单流体稳态等温；高级两相/UDF 提供经单步实测的方法与验收边界 |
 | [cfd-preprocessing](skills/cfd-preprocessing/SKILL.md) | 几何清理、区域命名、网格/y+ 策略与质量审查 | 不包含求解及后处理 |
 | [freecad-gmsh-qflux](skills/freecad-gmsh-qflux/SKILL.md) | FreeCAD→Gmsh→米制多区 CGNS→QFlux 回读 | 附七叶风扇 FCStd 和前处理脚本；不启动求解 |
 | [qflux-liquid-cooling](skills/qflux-liquid-cooling/SKILL.md) | 多支路液冷管路水力模板、求解和偏流统计 | 矩形流道演示；不自动包含共轭传热或真实冷板 |
@@ -41,7 +41,7 @@ python cases/duct-demo/adapters/duct.py --case cases/duct-demo
 python cases/duct-demo/tools/mesh_export.py --case cases/duct-demo
 ```
 
-QFX 配置、独立回读、求解与场导出的后续命令见 [通用工作流入口](skills/cfd-case-workflow/SKILL.md)。正式模型使用 `--example custom`，根据实际几何与物理编写适配器。Codex 可选接入本机 QFlux MCP；安装注册、宿主检查和调用步骤见 [QFlux MCP 参考](skills/cfd-case-workflow/references/qflux-mcp.md)。风扇需要先复制并填写 [环境配置模板](skills/freecad-gmsh-qflux/assets/environment.example.json)，具体见 [风扇运行说明](skills/freecad-gmsh-qflux/references/fan-example.md)。
+QFX 配置、独立回读、求解与场导出的后续命令见 [通用工作流入口](skills/cfd-case-workflow/SKILL.md)。正式模型使用 `--example custom`，根据实际几何与物理编写适配器。Codex 可选接入本机 QFlux MCP；安装注册、`--lc` 宿主检查、长调用超时复核和单步求解步骤见 [QFlux MCP 参考](skills/cfd-case-workflow/references/qflux-mcp.md)。离散锡膏/液滴需要在同一 Region 内按 STEP 真实轮廓初始化时，见 [VOF 与 UDF 初始相](skills/cfd-case-workflow/references/vof-udf-initialization.md)。风扇需要先复制并填写 [环境配置模板](skills/freecad-gmsh-qflux/assets/environment.example.json)，具体见 [风扇运行说明](skills/freecad-gmsh-qflux/references/fan-example.md)。
 
 ## 风扇行业技能
 

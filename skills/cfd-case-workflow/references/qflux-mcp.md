@@ -39,6 +39,8 @@ command = '<本机QFLUX安装目录>\qflux-mcp\qflux-mcp.exe'
 & "$QfluxRoot\qflux.exe" --lc
 ```
 
+普通方式打开的 QFlux GUI 不一定注册为可控宿主。需要 MCP 控制时应从 `--lc` 启动；若 `list_qflux_hosts` 仍列出已退出的旧进程，不能仅凭列表存在就认定可用。旧宿主常表现为连接被拒绝（Windows 可见 `WinError 10061`），此时重新列出宿主并选择最新、`control_enabled=true` 的 GUI 宿主。宿主 ID 和端口都是进程级临时值，不得写入脚本或交付配置。
+
 若目标宿主已运行，复用它并先确认其中当前加载的案例；不要为了“重连”再启动多个宿主或覆盖当前工程。之后在 Codex 中依次完成：
 
 1. 确认当前会话的工具清单中出现 QFlux MCP 工具；若没有，检查 MCP 配置状态并重载连接/新开本地会话。
@@ -57,8 +59,26 @@ command = '<本机QFLUX安装目录>\qflux-mcp\qflux-mcp.exe'
 - 导出场后核对 QFX/DAT 哈希、迭代号、有效字段、面位置和积分方向；将原生监测与场重构积分分别记录。MCP 调用链成功不代表求解收敛或物理结果有效，仍须遵循 [验收与交付](validation-delivery.md)。
 - 脚本异常时先读取 traceback 和宿主状态。`reset_qfx_python_context` 仅清理所选宿主的 Python 全局执行上下文，不是重启宿主或恢复工程的命令。
 
+打开数百 MB QFX、加载大型 DAT 或启动求解时，MCP 客户端可能在动作仍于宿主中执行时先返回超时。可用以下只读短查询确认当前工程和结果是否已经切换：
+
+```python
+from qfxPyApi.qxmod.runtime import getActiveModel
+
+model = getActiveModel()
+print(model.currentCase)
+print(model.currentResult)
+```
+
+同时检查预期输出目录和求解器进程。只有确认原动作未发生后才允许重试。
+
+## 通过 MCP/API 启动 QSolver
+
+启动前使用 API 查询工具读取本机 `qxcmd.ICmdStartQSolver` 和 `QSolverParameter` 的实际声明。已验证版本的关键字段包括 `qfxFile`、`rootPath`、`datPath`、`tmpPath`、`sPath`、`clearFlag`、`coreNum`、`useGPU`、`useMem`、`partitionFlag`、`meshMotionFlag`、`forceCompileFlag`、`reuseMesh` 和 `reuseData`；其他版本不得照抄字段名。
+
+含 UDF 的案例必须令 `sPath` 指向案例根目录，使 QSolver 命令含 `--spath <case-root>`，否则运行进程可能找不到 `udf/lib/` 内的 UDF 及其依赖。QSolver 会回写输入 QFX，因此 `qfxFile` 必须指向新阶段目录中的副本，不能直接指向已验收源工程。详细初始相和单步测试见 [VOF 与 UDF 初始化](vof-udf-initialization.md)。
+
 ## 已验证边界
 
 本机集成证据覆盖 MCP initialize/tools-list、GUI 宿主发现与选择、Python 脚本执行、已完成真实 QFX/DAT 的读取、工况回读、检测面字段导出与积分。核对所用的 QFX/DAT 源哈希未改变；MCP 面场重构流量与已验收同一最终场的重构值差为 0，和求解器监测值差约 −0.0416%，来自积分口径差别。
 
-该验证没有通过 MCP 启动新一轮求解，也没有证明所有网格导入、多物理场设置、高级接口或其他 QFlux 版本均可用。每台电脑、每个版本仍须先做小规模只读连接与 API 回读测试；高级操作必须按目标案例单独验收。
+2026-11-06 又通过 MCP/API 实际下发了一个含 UDF 的两相瞬态单步求解，生成可回读的步 1 DAT，并与此前独立烟雾测试的文件哈希一致。该追加验证只覆盖 1 个瞬态步和 1 次内迭代，不证明完整瞬态收敛、物理结果有效、DFBI/Morphing 已配置，也不证明所有网格导入、多物理场设置、高级接口或其他 QFlux 版本均可用。每台电脑、每个版本仍须先做小规模只读连接与 API 回读测试；高级操作必须按目标案例单独验收。

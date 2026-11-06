@@ -50,11 +50,13 @@
 - 直管自检无棱柱层、无 y+ 验证、无网格无关性研究；用于安装链路验证。
 - 液冷为矩形通道水力模板，真实冷板和热负荷必须另建几何与物理模型；一阶格式的数值扩散限制保留。
 
-## QFlux MCP 接入检查 · 2026-11-03
+## QFlux MCP 与 VOF/UDF 单步检查 · 2026-11-03 至 2026-11-06
 
 本机 TF-QFLUX 原生 MCP 服务已注册到 Codex，并通过 stdio JSON-RPC 完成 initialize/tools-list、宿主发现/选择、API 声明读取、Python 脚本调用，以及已完成 QFX/DAT 的设置回读和检测面导出。源工程和结果场哈希保持不变；场重构流量与同一最终场的基线重构值一致。
 
-该实测不包含通过 MCP 启动新求解，也不证明任意版本、网格导入或高级物理设置均已验证。可迁移安装命令和操作步骤见 [QFlux MCP 参考](../skills/cfd-case-workflow/references/qflux-mcp.md)。MCP 服务端、商业软件、许可证、本机路径及会话记录不纳入 GitHub 技能资源。
+2026-11-06 追加验证了单 Region 两相回流焊案例：从 STEP 真实圆弧轮廓生成 UDF 初始锡膏体积分数，通过 MCP/API 携带 `--spath` 实际启动 QSolver，并完成 1 个瞬态步、1 次内迭代。2,651,103 单元网格的初始液相体积离散误差为 `+0.065362%`；步 1 DAT 可回读且 SHA-256 与此前独立烟雾测试一致。
+
+该实测只证明 UDF 加载、初始相、MCP 下发和单步写场链路，不证明完整 `0.02 s` 瞬态收敛、物理结果有效或 DFBI/Morphing 已配置。可迁移安装、宿主故障诊断和求解启动见 [QFlux MCP 参考](../skills/cfd-case-workflow/references/qflux-mcp.md)，真实轮廓初始化见 [VOF 与 UDF 初始相](../skills/cfd-case-workflow/references/vof-udf-initialization.md)。MCP 服务端、商业软件、许可证、客户模型、QFX/DAT、本机路径及会话记录不纳入 GitHub 技能资源。
 
 ## 吊扇试验技能
 

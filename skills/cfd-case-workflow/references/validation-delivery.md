@@ -65,4 +65,18 @@ python tools/package_artifacts.py verify <案例包.zip>
 
 打包脚本拒绝机器私有 `environment.json`、软件二进制和常见密钥后缀；显式清单仍须检查内容不含凭据。接收方重新填写自己的环境。ZIP内有逐文件SHA256和大小，外部生成ZIP SHA256，校验包含CRC与全部条目一致性。
 
+### 大型 QFlux/UDF 案例分包
+
+当案例目录包含数百 MB QFX、多个大型 DAT、运行时副本和历史阶段时，不应把整个目录直接压缩。推荐拆为：
+
+| 包 | 最小内容 | 用途 |
+|---|---|---|
+| RunReady | 最终 QFX、单步 `solver_input.qfx`、`udf/lib/`、`udf/src/`、检查记录、README、SHA256 | 在已安装兼容 QFlux 的电脑快速复跑 |
+| Source | RunReady 内容加 STEP/MSH、相对路径生成脚本和依赖说明 | 重建几何、初始相和工程 |
+| ReferenceResult | 必要初始/最终 DAT、日志、监测和后处理 | 独立核验参考结果，按体积单独传输 |
+
+排除 `environment.json`、私有运行时、Python 缓存、旧版/失败 QFX、自动生成的 `*_data/`、厂商 EXE/DLL、许可证、凭据和宿主 ID。案例参数与生成脚本不得保留开发机绝对路径；发布模板使用相对路径，本机差异写入不提交的 `environment.local.json`。
+
+QSolver 会回写传入的 QFX，运行包的正式源工程只读保存，每个阶段先复制为 `runs/<stage>/solver_input.qfx`。关闭 QFlux GUI 后再对正式 QFX 做独立回读并生成最终 SHA-256；HDF5 工程即使文件大小不变，也可能因 GUI 保存而改变内部内容，不能沿用此前检查记录中的旧哈希。DAT/HDF5 通常已压缩，二次高压缩收益有限，应优先保证分包、哈希和可恢复性。
+
 无用户清理要求时不主动删除原案例。获准清理时先以交付清单确认最终STEP/网格/QFX/必要DAT/证据均可回读，再只清理已识别的重复中间文件；保留可恢复性并报告位置。
