@@ -1,137 +1,60 @@
 # cae-workflows · 可复用 CAE 工作流
 
-将本机已积累的 FreeCAD / Gmsh / TF-QFLUX 方法、脚本、参数模板及验证记录整理为七个独立技能包，支持复制到新电脑或新案例。当前内容以 CFD 前处理、水力计算、风扇行业流程和结果验收为主。
+面向 FreeCAD、Gmsh、TF-QFLUX 和 Slurm 的可迁移 CAE 技能包。仓库重点是 CFD 前处理、风扇与液冷案例、求解验收和可追溯交付；商业软件、许可证、客户模型和本机配置不随仓库分发。
 
 ## 工作流选择
 
+<!-- WORKFLOWS:START -->
 | 模块 | 用途 | 使用边界 |
 |---|---|---|
-| [fan-cfd](skills/fan-cfd/SKILL.md) | 风扇行业入口：几何清理、流体分区、STAR/Gmsh网格、实际边界层、QFlux MRF计算及风量/云图交付 | 单转子多区多接口适配，具备独立回读与求解证据；具体几何、网格器版本及物理有效性需本案例验证 |
-| [cfd-case-workflow](skills/cfd-case-workflow/SKILL.md) | 推荐入口：几何、网格、QFX、VOF/UDF 初始相、求解、场导出、验收和打包 | 自动设置限单流体稳态等温；高级两相/UDF 提供经单步实测的方法与验收边界 |
+| [fan-cfd](skills/fan-cfd/SKILL.md) | 风扇行业入口：几何清理、流体分区、STAR/Gmsh 网格、QFlux MRF 计算及风量/云图交付 | 单转子多区多接口适配；具体几何、软件版本及物理有效性需按案例验证 |
+| [cfd-case-workflow](skills/cfd-case-workflow/SKILL.md) | 通用入口：几何、网格、QFX、VOF/UDF 初始相、求解、场导出、验收和打包 | 自动设置限单流体稳态等温；高级物理按目标软件能力和单独证据适配 |
 | [cfd-preprocessing](skills/cfd-preprocessing/SKILL.md) | 几何清理、区域命名、网格/y+ 策略与质量审查 | 不包含求解及后处理 |
-| [freecad-gmsh-qflux](skills/freecad-gmsh-qflux/SKILL.md) | FreeCAD→Gmsh→米制多区 CGNS→QFlux 回读 | 附七叶风扇 FCStd 和前处理脚本；不启动求解 |
-| [qflux-liquid-cooling](skills/qflux-liquid-cooling/SKILL.md) | 多支路液冷管路水力模板、求解和偏流统计 | 矩形流道演示；不自动包含共轭传热或真实冷板 |
-| [ceiling-fan-cfd](skills/ceiling-fan-cfd/SKILL.md) | 吊扇保形清理、内外屏试验室、Gmsh表面、STAR多面体/棱柱层、QFlux稳态MRF和检测量交付 | 七款案例经验参数化；新产品需重新标面/外形复核，商业API有版本限制 |
-| [qflux-slurm](skills/qflux-slurm/SKILL.md) | 复用目标超算 Slurm 脚本，隔离各核数工况、登记作业号并汇总运行证据 | 辅助工具不提交作业；多节点、GPU、混合 MPI/OpenMP 需单独适配 |
+| [freecad-gmsh-qflux](skills/freecad-gmsh-qflux/SKILL.md) | FreeCAD 到 Gmsh 到米制多区 CGNS，再到 QFlux 回读 | 附七叶风扇 FCStd 和前处理脚本；不启动求解 |
+| [qflux-liquid-cooling](skills/qflux-liquid-cooling/SKILL.md) | 多支路液冷管路水力模板、求解和偏流统计 | 矩形流道演示；不自动包含共轭换热或真实冷板 |
+| [ceiling-fan-cfd](skills/ceiling-fan-cfd/SKILL.md) | 吊扇保形清理、试验室流体域、STAR/Gmsh 网格、QFlux MRF 和检测量交付 | 经验参数化入口；新产品需重新复核几何、标面、工况和商业 API 版本 |
+| [qflux-slurm](skills/qflux-slurm/SKILL.md) | 复用目标超算 Slurm 脚本，隔离核数工况、登记作业号并汇总并行耗时 | 辅助工具不提交作业；多节点、GPU 和混合并行需单独适配 |
+<!-- WORKFLOWS:END -->
 
-各模块中的 `references/` 解释方法和验证范围，`scripts/` 提供工具，`assets/` 提供参数模板或示例输入。保留这些相对目录即可独立使用。
+通用案例优先从 `cfd-case-workflow` 开始；散热风机和轴流风扇使用 `fan-cfd`；吊扇试验室复算使用 `ceiling-fan-cfd`。每个技能的 `SKILL.md` 负责入口和路由，详细方法放在对应 `references/`。
 
 ## 快速开始
-
-以下命令从仓库根目录执行，路径同时适用于 PowerShell 和常见 Linux shell。案例放入被忽略的 `cases/`，避免提交生成结果。
 
 ```text
 git clone https://github.com/liuss1234/cae-workflows.git
 cd cae-workflows
 python -m venv .venv-cfd
-```
-
-激活虚拟环境：Windows PowerShell 使用 `.venv-cfd/Scripts/Activate.ps1`；Linux 使用 `source .venv-cfd/bin/activate`。随后安装普通建模环境依赖并初始化直管：
-
-```text
 python -m pip install -r skills/cfd-case-workflow/assets/requirements-build.txt
 python skills/cfd-case-workflow/scripts/init_case.py --directory cases/duct-demo --example duct
 ```
 
-编辑 `cases/duct-demo/environment.json`，填写本机 QFlux 安装目录和 API 匹配的 Python。普通建模 Python 与 QFlux API Python 分开；不要将普通环境依赖装入厂商 Python。
+Windows PowerShell 使用 `.venv-cfd/Scripts/Activate.ps1` 激活环境，Linux 使用 `source .venv-cfd/bin/activate`。案例放入被忽略的 `cases/`；本机 QFlux 路径写入案例自己的 `environment.json`，不提交到仓库。
 
-```text
-python cases/duct-demo/tools/probe_environment.py --case cases/duct-demo --check-api
-python cases/duct-demo/adapters/duct.py --case cases/duct-demo
-python cases/duct-demo/tools/mesh_export.py --case cases/duct-demo
-```
+只安装单个 Codex 技能时，复制对应的 `skills/<名称>/` 到 `%USERPROFILE%/.codex/skills/` 或 `~/.codex/skills/`。保留技能内部的 `scripts/`、`references/`、`assets/` 和 `agents/` 相对结构。
 
-QFX 配置、独立回读、求解与场导出的后续命令见 [通用工作流入口](skills/cfd-case-workflow/SKILL.md)。正式模型使用 `--example custom`，根据实际几何与物理编写适配器。Codex 可选接入本机 QFlux MCP；安装注册、`--lc` 宿主检查、长调用超时复核和单步求解步骤见 [QFlux MCP 参考](skills/cfd-case-workflow/references/qflux-mcp.md)。离散锡膏/液滴需要在同一 Region 内按 STEP 真实轮廓初始化时，见 [VOF 与 UDF 初始相](skills/cfd-case-workflow/references/vof-udf-initialization.md)。风扇需要先复制并填写 [环境配置模板](skills/freecad-gmsh-qflux/assets/environment.example.json)，具体见 [风扇运行说明](skills/freecad-gmsh-qflux/references/fan-example.md)。
-
-## 风扇行业技能
-
-安装 `skills/fan-cfd/` 后，用 `$fan-cfd` 调用，例如：
-
-> 使用 $fan-cfd，依据这款风机的STEP清理几何，保留外框内壁和真实叶型，建立进出口、静止和旋转流体域；按已确认参数生成边界层网格，在QFlux核对全部边界和MRF后计算，输出真实风量及横向速度云图。
-
-技能包含独立参数模板、CAD只读检查、线性混合CGNS导出、实际层证据准入、QFlux配置/独立回读、单阶段求解启动和监控统计。STAR多面体及Gmsh三维层的操作与限制见[网格说明](skills/fan-cfd/references/meshing.md)。
-
-```text
-python skills/fan-cfd/scripts/self_test.py
-python skills/fan-cfd/scripts/fan_case.py init --case cases/new-fan --source input/fan.step
-```
-
-未知工况保留null，填写后再配置/计算。小型四区合成安装检查与真实验证范围见[fan-cfd发布验证](skills/fan-cfd/references/validation.md)。不需要安装其他CFD技能即可使用。
-
-## 吊扇测试经验技能
-
-安装 `skills/ceiling-fan-cfd/` 后，用 `$ceiling-fan-cfd` 调用；例如：
-
-> 使用 $ceiling-fan-cfd，基于这款吊扇的STEP和已确认试验布置，先做保形清理与边界层网格，验证后建立QFlux工程。继承本次已确认转速与检测口径。
-
-跨平台普通Python自检无需商业软件，也不读取客户数据：
-
-```text
-python skills/ceiling-fan-cfd/scripts/self_test.py
-python skills/ceiling-fan-cfd/scripts/fan_case.py init --case cases/new-fan --source input/fan.step
-```
-
-初始化后填写未知转速、转向、真实扫掠直径及层覆盖准入值，再执行 `fan_case.py validate --case cases/new-fan`。三目录、CAD/网格来源、MRF参考系、监控稳定与最终QFX/DAT按版本追溯。
-另附可自行生成的合成三叶几何，详见[迁移说明](skills/ceiling-fan-cfd/references/portability.md)；它用于安装/流程验证，不用于产品性能结论。实际软件和验证范围见[发布验证](skills/ceiling-fan-cfd/references/release-validation.md)。
-
-## QFlux Slurm 工作流
-
-安装 `skills/qflux-slurm/` 后，用 `$qflux-slurm` 调用。辅助脚本仅准备隔离目录、登记已返回的作业号和只读汇总，不调用 `sbatch`：
-
-```text
-python skills/qflux-slurm/scripts/slurm_scaling.py prepare --root cases/scaling --qfx cases/base.qfx --template cases/submit.sh --partition <实际分区> --cores 16 32 64 --job-prefix <作业前缀>
-```
-
-提交前按目标集群检查生成的 `submit.sh`，并使用 [Slurm 流程说明](skills/qflux-slurm/references/slurm-workflow.md)中的核验步骤。工具不负责提交，也不下载结果场。
-
-## 在其他电脑或智能体中复用
-
-直接复制所需 `skills/<模块名>/` 到目标电脑的技能目录。Codex 默认目录为 Windows 的 `%USERPROFILE%/.codex/skills/` 或 Linux 的 `~/.codex/skills/`；设置了 `CODEX_HOME` 时使用其 `skills/` 子目录。重载后用 `$cfd-case-workflow` 等名称调用。其他智能体可先读取模块的 `SKILL.md`，再按阶段读取参考资料。
-
-也可生成七个可直接解压安装的 ZIP，每个包都有内容 SHA256 清单和 ZIP 校验：
-
-```text
-python tools/package_workflows.py --output dist/cae-workflows
-```
-
-输出目录必须是新目录。ZIP 内保留完整模块结构和风扇示例模型；软件、厂商 API、DLL、许可证、SSH 凭据和本机配置由目标电脑自行准备。
-
-## 下载次数如何统计
-
-**推荐通过 [GitHub Releases](https://github.com/liuss1234/cae-workflows/releases) 发布每个技能的版本化 ZIP，并以附件下载计数作为统计口径。** 维护者先运行上述打包命令，再将所需 ZIP 及其 `.sha256` 文件上传为 Release 附件。其他用户和 AI 智能体优先下载对应技能附件，并保留版本、来源和校验值；这类下载由 GitHub 计数，技能无需收集使用者信息。
-
-| 获取方式 | 可用统计 | 限制 |
-|---|---|---|
-| 下载 Release 中单独上传的技能 ZIP | GitHub API 的每附件 `download_count`，可按技能和版本汇总 | 不是独立用户数；重复下载可能重复计数，无法可靠区分 AI 与真人 |
-| `git clone` | 维护者在仓库 Insights → Traffic 查看克隆次数及独立克隆者 | 仅最近 14 天；不是单个技能的安装量，不应与附件下载量相加 |
-| 网页浏览、Raw 文件、源码 ZIP 或第三方镜像 | 部分访问可见于 Traffic，或由分发平台另行统计 | GitHub 没有覆盖这些渠道的统一“技能下载总数”；不能按 Release 附件口径统计 |
-
-本段说明统计方案；只有实际发布并下载 Release 附件后才会产生对应计数，补充说明不能追溯此前所有下载。长期留存方式、查询接口及口径见 [下载统计说明](docs/DOWNLOAD_STATS.md)。
-
-## 欢迎把完成的案例贡献为技能包
-
-**建议其他用户和 AI 智能体将使用本仓库技能完成的案例，整理为可复用、可验证、可交付的技能包，再通过 Pull Request 贡献到 GitHub。** 将案例中的方法、参数模板、运行脚本、验证依据和使用限制沉淀下来，便于下一位使用者在新电脑、新模型上复用。
-
-贡献包应包含 `SKILL.md`、可调参数、必要脚本、可公开示例和验证记录；将真实算例结果与安装自检分开说明。提交前检查个人信息及数据授权，排除账号、机器路径、凭据和厂商软件。AI 智能体代表用户上传时，应取得该用户对公开内容和提交目标的授权。
-
-具体目录、打包命令、大小限制和贡献步骤见 [案例技能包贡献指南](CONTRIBUTING.md)。小型源文件通过 PR 提交，大型网格、结果场及可安装 ZIP 经审核后作为 Release 附件发布；不要直接上传整套本机工作目录。
-
-## 仓库检查与验证范围
+## 仓库验证
 
 ```text
 python -m pip install -r requirements-dev.txt
+python -m ruff check tools tests
+python -m pytest
 python tools/check_repository.py
 ```
 
-检查包含 Python/宏语法、JSON/YAML、技能元数据、相对文档链接、命令行入口、独立案例初始化、拒绝覆盖、Slurm 目录准备/作业登记保护、风扇快照完整性以及打包后的 CRC/SHA256 回读。GitHub Actions 在 Windows 和 Linux 执行同一组检查，不启动商业求解器或提交超算作业。
+自动检查覆盖 Windows/Linux、Python 3.8/3.11、仓库工具 lint、源码与元数据、文档链接、CLI 帮助、案例初始化、拒绝覆盖、自检和安装包哈希回读。技能中的厂商 API 脚本常需先配置 DLL 路径再延迟导入，因此不统一套用导入顺序规则。自动检查不运行商业求解器，也不能代替网格质量、收敛、守恒和物理有效性验收。实际验证证据与限制见 [验证范围](docs/VALIDATION.md)。
 
-历史端到端证据与本次仓库检查分开记录，见 [验证范围](docs/VALIDATION.md)。通用 Python 工具可迁移；QFlux 原生 API/CGNS 链路仅实测 Windows。MRF、CHT、滑移、overset 等需要按目标软件与实际模型适配，基础链路验证不能代替这些物理场验证。
+## 打包与发布
 
-## 维护约定
+```text
+python tools/package_workflows.py --output dist/release-vX.Y.Z
+```
 
-- 可调案例参数集中在 `case.json`、`workflow.json` 或脚本头部；本机环境配置使用示例副本，放在 `local/` 或案例目录。
-- 新案例使用新目录，原始 CAD、已交付结果和其他任务不覆盖。
-- 变更通用脚本后运行仓库检查；涉及几何、接口、单位或求解设置时，还需执行相应原生软件验证并记录结果。
-- 历史报告的数值仅说明特定案例；新报告使用本次真实测量和求解数据，明确网格、模型及误差限制。
+输出目录必须尚不存在。生成的技能 ZIP 和 SHA256 文件通过 GitHub Release 发布；标签采用 `vMAJOR.MINOR.PATCH`。下载统计口径见 [下载统计说明](docs/DOWNLOAD_STATS.md)，版本、分支和发布步骤见 [维护指南](docs/MAINTENANCE.md)。
 
-本仓库分发自编工作流与示例，不包含厂商软件本体；第三方软件和库遵守其各自许可。仓库暂未声明统一开源许可证。
+## 贡献
+
+所有变更通过分支和 Pull Request 提交，不直接推送 `main`。新增或修改技能前阅读 [贡献指南](CONTRIBUTING.md)；不要提交凭据、个人路径、客户数据、厂商程序或未经授权的第三方内容。
+
+## 许可证
+
+本仓库自编代码和文档采用 [MIT License](LICENSE)。第三方软件、格式、商标和用户提供的数据仍遵守各自许可与授权条件；MIT 许可证不授予商业软件或客户资料的再分发权。

@@ -1,0 +1,24 @@
+name: Feature request
+description: 提议新的工作流能力或现有技能改进
+title: "[Feature] "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: use_case
+    attributes:
+      label: 工程场景
+      description: 说明要解决的实际问题、输入和期望交付物。
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: 建议范围
+      description: 指出现有技能是否可扩展，以及不应包含的内容。
+    validations:
+      required: true
+  - type: textarea
+    id: validation
+    attributes:
+      label: 验证方式
+      description: 说明可用的软件、公开示例和验收依据。

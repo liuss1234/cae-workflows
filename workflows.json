@@ -1,0 +1,97 @@
+{
+  "schema_version": 1,
+  "workflows": [
+    {
+      "name": "fan-cfd",
+      "summary": "风扇行业入口：几何清理、流体分区、STAR/Gmsh 网格、QFlux MRF 计算及风量/云图交付",
+      "boundary": "单转子多区多接口适配；具体几何、软件版本及物理有效性需按案例验证",
+      "cli_entries": [
+        "fan_case",
+        "cad_audit",
+        "export_cgns",
+        "create_smoke_case",
+        "qflux_adapter",
+        "run_solver",
+        "analyze_history",
+        "self_test"
+      ],
+      "self_test": "scripts/self_test.py"
+    },
+    {
+      "name": "cfd-case-workflow",
+      "summary": "通用入口：几何、网格、QFX、VOF/UDF 初始相、求解、场导出、验收和打包",
+      "boundary": "自动设置限单流体稳态等温；高级物理按目标软件能力和单独证据适配",
+      "cli_entries": [
+        "init_case",
+        "probe_environment",
+        "mesh_export",
+        "qflux_case",
+        "run_solver",
+        "solution_check",
+        "plot_vtu",
+        "package_artifacts"
+      ]
+    },
+    {
+      "name": "cfd-preprocessing",
+      "summary": "几何清理、区域命名、网格/y+ 策略与质量审查",
+      "boundary": "不包含求解及后处理",
+      "cli_entries": [
+        "clean_cad_geometry"
+      ]
+    },
+    {
+      "name": "freecad-gmsh-qflux",
+      "summary": "FreeCAD 到 Gmsh 到米制多区 CGNS，再到 QFlux 回读",
+      "boundary": "附七叶风扇 FCStd 和前处理脚本；不启动求解",
+      "cli_entries": [
+        "probe_environment",
+        "run_fan_example",
+        "qflux_handoff"
+      ],
+      "required_package_files": [
+        "assets/fan-example.FCStd"
+      ]
+    },
+    {
+      "name": "qflux-liquid-cooling",
+      "summary": "多支路液冷管路水力模板、求解和偏流统计",
+      "boundary": "矩形流道演示；不自动包含共轭换热或真实冷板",
+      "cli_entries": [
+        "init_case",
+        "probe_environment",
+        "verify_case",
+        "write_report",
+        "package_skill",
+        "package_delivery",
+        "verify_package"
+      ]
+    },
+    {
+      "name": "ceiling-fan-cfd",
+      "summary": "吊扇保形清理、试验室流体域、STAR/Gmsh 网格、QFlux MRF 和检测量交付",
+      "boundary": "经验参数化入口；新产品需重新复核几何、标面、工况和商业 API 版本",
+      "cli_entries": [
+        "fan_case",
+        "analyze_history",
+        "cad_audit",
+        "build_room_domain",
+        "gmsh_surfaces",
+        "render_star_macro",
+        "check_poly_mesh",
+        "make_qflux_config",
+        "qflux_adapter",
+        "create_synthetic_case"
+      ],
+      "self_test": "scripts/self_test.py"
+    },
+    {
+      "name": "qflux-slurm",
+      "summary": "复用目标超算 Slurm 脚本，隔离核数工况、登记作业号并汇总并行耗时",
+      "boundary": "辅助工具不提交作业；多节点、GPU 和混合并行需单独适配",
+      "cli_entries": [
+        "slurm_scaling"
+      ]
+    }
+  ]
+}

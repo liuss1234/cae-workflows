@@ -14,21 +14,16 @@ import zipfile
 from urllib.parse import unquote
 from xml.etree import ElementTree
 
+from repository_manifest import README_PATH, expected_readme, load_workflows
+
 # 可调检查参数：运行隔离在临时目录，子进程超时不影响实际 CFD 求解。
 REPOSITORY = Path(__file__).resolve().parents[1]
-WORKFLOWS = ("cfd-case-workflow", "cfd-preprocessing", "freecad-gmsh-qflux", "qflux-liquid-cooling", "ceiling-fan-cfd", "fan-cfd", "qflux-slurm")
+WORKFLOW_RECORDS = load_workflows()
+WORKFLOWS = tuple(workflow["name"] for workflow in WORKFLOW_RECORDS)
 COMMAND_TIMEOUT_SECONDS = 60
 LINK_PATTERN = re.compile(r"\[[^\]]*\]\(([^)]+)\)")
 EXCLUDED_DIRECTORIES = {".git", ".venv", ".venv-cfd", "__pycache__", "cases", "dist", "local"}
-CLI_ENTRIES = {
-    "fan-cfd": ("fan_case", "cad_audit", "export_cgns", "create_smoke_case", "qflux_adapter", "run_solver", "analyze_history", "self_test"),
-    "ceiling-fan-cfd": ("fan_case", "analyze_history", "cad_audit", "build_room_domain", "gmsh_surfaces", "render_star_macro", "check_poly_mesh", "make_qflux_config", "qflux_adapter", "create_synthetic_case"),
-    "cfd-case-workflow": ("init_case", "probe_environment", "mesh_export", "qflux_case", "run_solver", "solution_check", "plot_vtu", "package_artifacts"),
-    "cfd-preprocessing": ("clean_cad_geometry",),
-    "freecad-gmsh-qflux": ("probe_environment", "run_fan_example", "qflux_handoff"),
-    "qflux-liquid-cooling": ("init_case", "probe_environment", "verify_case", "write_report", "package_skill", "package_delivery", "verify_package"),
-    "qflux-slurm": ("slurm_scaling",),
-}
+CLI_ENTRIES = {workflow["name"]: tuple(workflow.get("cli_entries", [])) for workflow in WORKFLOW_RECORDS}
 
 
 def run(arguments, expected=0):
@@ -56,7 +51,7 @@ def check_sources():
             continue
         if path.suffix in {".py", ".FCMacro"}:
             # 只解析，不执行依赖 FreeCAD、Gmsh 或 QFlux 的模板。
-            ast.parse(path.read_text(encoding="utf-8-sig"), filename=str(relative), feature_version=(3, 8))
+            ast.parse(path.read_text(encoding="utf-8-sig"), filename=str(relative), feature_version=8)
             counts["python_and_macros"] += 1
         elif path.suffix == ".json":
             json.loads(path.read_text(encoding="utf-8-sig"))
@@ -73,6 +68,12 @@ def check_sources():
                 if not (path.parent / unquote(target)).exists():
                     raise FileNotFoundError("文档链接失效：%s → %s" % (relative, target))
                 counts["local_links"] += 1
+    discovered = {path.parent.name for path in (REPOSITORY / "skills").glob("*/SKILL.md")}
+    if discovered != set(WORKFLOWS):
+        raise ValueError("workflows.json 与 skills 目录不一致")
+    readme = README_PATH.read_text(encoding="utf-8")
+    if readme != expected_readme(readme, WORKFLOW_RECORDS):
+        raise ValueError("README 工作流表已过期，请执行 python tools/update_readme.py")
     for name in WORKFLOWS:
         content = (REPOSITORY / "skills" / name / "SKILL.md").read_text(encoding="utf-8-sig")
         match = re.match(r"\A---\s*\n(.*?)\n---(?:\s*\n|$)", content, re.DOTALL)
@@ -168,6 +169,7 @@ def main():
     """完成结构、命令行、初始化及可安装 ZIP 的回读检查，输出可审查的结果。"""
     argparse.ArgumentParser(description=__doc__).parse_args()
     report = check_sources()
+    report["workflow_registry"] = "passed"
     for name, entries in CLI_ENTRIES.items():
         for entry in entries:
             run([REPOSITORY / "skills" / name / "scripts" / (entry + ".py"), "--help"])
@@ -177,21 +179,23 @@ def main():
         check_initialization(temporary)
         check_slurm_helpers(temporary)
         report["slurm_prepare_register"] = "passed"
-        run([REPOSITORY / "skills/ceiling-fan-cfd/scripts/self_test.py"])
-        report["ceiling_fan_self_test"] = "passed"
-        run([REPOSITORY / "skills/fan-cfd/scripts/self_test.py"])
-        report["fan_cfd_self_test"] = "passed"
+        for workflow in WORKFLOW_RECORDS:
+            if workflow.get("self_test"):
+                run([REPOSITORY / "skills" / workflow["name"] / workflow["self_test"]])
+                report[workflow["name"].replace("-", "_") + "_self_test"] = "passed"
         output = temporary / "packages"
         run([REPOSITORY / "tools/package_workflows.py", "--output", output])
         packer = REPOSITORY / "skills/cfd-case-workflow/scripts/package_artifacts.py"
-        for name in WORKFLOWS:
+        for workflow in WORKFLOW_RECORDS:
+            name = workflow["name"]
             archive_path = output / (name + ".zip")
             run([packer, "verify", archive_path])
             with zipfile.ZipFile(archive_path) as archive:
                 if name + "/SKILL.md" not in archive.namelist():
                     raise ValueError("安装包缺少技能入口：" + name)
-                if name == "freecad-gmsh-qflux" and name + "/assets/fan-example.FCStd" not in archive.namelist():
-                    raise ValueError("风扇安装包遗漏 CAD 输入")
+                for relative in workflow.get("required_package_files", []):
+                    if name + "/" + relative not in archive.namelist():
+                        raise ValueError("安装包遗漏必要文件：%s/%s" % (name, relative))
         run([REPOSITORY / "tools/package_workflows.py", "--output", output], expected=1)
     report.update(initialization="passed", overwrite_protection="passed", packages_crc_sha256="passed", passed=True)
     print(json.dumps(report, ensure_ascii=False, indent=2))
