@@ -9,7 +9,7 @@ import sys
 from pathlib import Path
 from cfd_common import inside, read_json, sha256
 
-# 可调工程参数放在案例case.json；模板仅提供本例网格起点。
+# 可调工程参数放在案例case.json；模板的几何相关参数按当前项目填写。
 SKILL_ROOT = Path(__file__).resolve().parents[1]
 NAME_PATTERN = re.compile(r"^[A-Za-z][A-Za-z0-9_]*$")
 

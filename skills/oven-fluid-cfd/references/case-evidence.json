@@ -1,21 +1,26 @@
 {
   "date": "2026-11-07",
-  "source": "私有项目独立几何/网格/工程回读报告及DG原生日志和同步开口监控；公开仅脱敏摘要",
+  "source": "私有项目独立几何/网格/工程回读报告及求解日志和同步开口监控；公开仅定性过程与相对诊断摘要",
   "not_public_reproduction_input": true,
   "geometry": {
-    "initial_shells": 238,
-    "initial_solids": 0,
-    "initial_faces": 12421,
-    "r6_volume_m3": 0.712622242874,
-    "user_repaired_volume_m3": 0.7110443159718481,
-    "user_repaired_faces": 8026,
-    "protected_baffles": 60,
-    "supply_bridges": 10,
-    "outlets": 15
+    "structure_types": [
+      "供风腔",
+      "风嘴",
+      "V形嘴",
+      "孔板",
+      "供风孔",
+      "喷缝",
+      "导流板",
+      "挡片",
+      "腰形孔",
+      "供风侧连接段",
+      "上部过渡"
+    ],
+    "excluded_space": "中央敞开回风空间",
+    "public_scope": "仅列结构类型；不公开真实结构数量、尺寸、拓扑统计或逐部件清单"
   },
   "cases": {
     "M04": {
-      "cells": 32303418,
       "iteration": 43,
       "scheduler_state": "FAILED",
       "residuals": {
@@ -29,7 +34,6 @@
       "mesh_quality_passed": false
     },
     "M08": {
-      "cells": 37314200,
       "iteration": 887,
       "scheduler_state": "COMPLETED",
       "residuals": {
@@ -45,7 +49,6 @@
   },
   "M08_saved_data": {
     "iteration": 887,
-    "bytes": 3599671819,
     "recombine_and_exit_log_verified": true,
     "exit_code": "0:0",
     "official_field_readback_performed": false
@@ -55,231 +58,17 @@
     "window_start_iteration": 787,
     "window_end_iteration": 886,
     "window_samples": 100,
-    "inlet_mean_volume_flow_m3_h": 3599.999999999993,
-    "outlets_total_mean_volume_flow_m3_h": 3599.978665921096,
-    "outlet_mean_volume_flow_m3_h": 239.99857772807306,
     "mean_net_mass_error_percent": 0.0005926133027075245,
     "maximum_window_mass_error_percent": 0.0017669001743816953,
     "distribution_cv_percent": 2.9433812018684207,
     "maximum_absolute_deviation_percent": 4.82313778114175,
-    "maximum_window_outlet_span_percent": 1.1716018724562625,
-    "rows": [
-      {
-        "outlet": "outlet_nozzle_01",
-        "nozzle": 1,
-        "last_iteration": 886,
-        "last_mass_flow_kg_s": 0.077465064853,
-        "last_volume_flow_m3_h": 231.60388129789885,
-        "mean_mass_flow_kg_s": 0.07702439520762,
-        "mean_volume_flow_m3_h": 230.28637384555435,
-        "outlet_total_share_percent": 6.396881626703555,
-        "signed_deviation_from_outlet_mean_percent": -4.04677559944666,
-        "signed_deviation_from_equal_inlet_share_percent": -4.047344231018839,
-        "window_relative_span_percent": 0.8765669463292419,
-        "window_stability_passed": false
-      },
-      {
-        "outlet": "outlet_nozzle_02",
-        "nozzle": 2,
-        "last_iteration": 886,
-        "last_mass_flow_kg_s": 0.076460499654,
-        "last_volume_flow_m3_h": 228.60044743326966,
-        "mean_mass_flow_kg_s": 0.07640118709887,
-        "mean_volume_flow_m3_h": 228.4231156514675,
-        "outlet_total_share_percent": 6.345124147923883,
-        "signed_deviation_from_outlet_mean_percent": -4.82313778114175,
-        "signed_deviation_from_equal_inlet_share_percent": -4.823701811888363,
-        "window_relative_span_percent": 0.22722384244546553,
-        "window_stability_passed": true
-      },
-      {
-        "outlet": "outlet_nozzle_03",
-        "nozzle": 3,
-        "last_iteration": 886,
-        "last_mass_flow_kg_s": 0.078525461597,
-        "last_volume_flow_m3_h": 234.77423947280127,
-        "mean_mass_flow_kg_s": 0.078549206888,
-        "mean_volume_flow_m3_h": 234.84523278531685,
-        "outlet_total_share_percent": 6.523517347712643,
-        "signed_deviation_from_outlet_mean_percent": -2.1472397843103557,
-        "signed_deviation_from_equal_inlet_share_percent": -2.1478196727844647,
-        "window_relative_span_percent": 0.2501896706356316,
-        "window_stability_passed": true
-      },
-      {
-        "outlet": "outlet_nozzle_04",
-        "nozzle": 4,
-        "last_iteration": 886,
-        "last_mass_flow_kg_s": 0.078146266051,
-        "last_volume_flow_m3_h": 233.64052635462173,
-        "mean_mass_flow_kg_s": 0.07875844155706997,
-        "mean_volume_flow_m3_h": 235.47079943979062,
-        "outlet_total_share_percent": 6.540894302203948,
-        "signed_deviation_from_outlet_mean_percent": -1.8865854669407849,
-        "signed_deviation_from_equal_inlet_share_percent": -1.887166900087053,
-        "window_relative_span_percent": 1.1716018724562625,
-        "window_stability_passed": false
-      },
-      {
-        "outlet": "outlet_nozzle_05",
-        "nozzle": 5,
-        "last_iteration": 886,
-        "last_mass_flow_kg_s": 0.081247996047,
-        "last_volume_flow_m3_h": 242.9140318654597,
-        "mean_mass_flow_kg_s": 0.08170160910068003,
-        "mean_volume_flow_m3_h": 244.27023732451468,
-        "outlet_total_share_percent": 6.785324580861518,
-        "signed_deviation_from_outlet_mean_percent": 1.7798687129227748,
-        "signed_deviation_from_equal_inlet_share_percent": 1.779265551881299,
-        "window_relative_span_percent": 0.9565999918519298,
-        "window_stability_passed": false
-      },
-      {
-        "outlet": "outlet_nozzle_06",
-        "nozzle": 6,
-        "last_iteration": 886,
-        "last_mass_flow_kg_s": 0.076180177192,
-        "last_volume_flow_m3_h": 227.76234356880659,
-        "mean_mass_flow_kg_s": 0.07666584156939997,
-        "mean_volume_flow_m3_h": 229.2143755915953,
-        "outlet_total_share_percent": 6.367103720959085,
-        "signed_deviation_from_outlet_mean_percent": -4.493444185613731,
-        "signed_deviation_from_equal_inlet_share_percent": -4.4940101701684485,
-        "window_relative_span_percent": 0.875425780583716,
-        "window_stability_passed": false
-      },
-      {
-        "outlet": "outlet_nozzle_07",
-        "nozzle": 7,
-        "last_iteration": 886,
-        "last_mass_flow_kg_s": 0.080120288354,
-        "last_volume_flow_m3_h": 239.54242843152562,
-        "mean_mass_flow_kg_s": 0.08000244383295,
-        "mean_volume_flow_m3_h": 239.19009866175566,
-        "outlet_total_share_percent": 6.644208781736103,
-        "signed_deviation_from_outlet_mean_percent": -0.3368682739584518,
-        "signed_deviation_from_equal_inlet_share_percent": -0.33745889093495984,
-        "window_relative_span_percent": 0.2735939735253977,
-        "window_stability_passed": true
-      },
-      {
-        "outlet": "outlet_nozzle_08",
-        "nozzle": 8,
-        "last_iteration": 886,
-        "last_mass_flow_kg_s": 0.081211489086,
-        "last_volume_flow_m3_h": 242.80488390465908,
-        "mean_mass_flow_kg_s": 0.08089532752444999,
-        "mean_volume_flow_m3_h": 241.85962884147492,
-        "outlet_total_share_percent": 6.7183628372862145,
-        "signed_deviation_from_outlet_mean_percent": 0.7754425592932124,
-        "signed_deviation_from_equal_inlet_share_percent": 0.774845350614739,
-        "window_relative_span_percent": 0.5264452101653002,
-        "window_stability_passed": false
-      },
-      {
-        "outlet": "outlet_nozzle_09",
-        "nozzle": 9,
-        "last_iteration": 886,
-        "last_mass_flow_kg_s": 0.082188895294,
-        "last_volume_flow_m3_h": 245.72711822805417,
-        "mean_mass_flow_kg_s": 0.08196646980326999,
-        "mean_volume_flow_m3_h": 245.06211385414167,
-        "outlet_total_share_percent": 6.807321281484309,
-        "signed_deviation_from_outlet_mean_percent": 2.1098192222646364,
-        "signed_deviation_from_equal_inlet_share_percent": 2.1092141058925495,
-        "window_relative_span_percent": 0.42603506145639214,
-        "window_stability_passed": true
-      },
-      {
-        "outlet": "outlet_nozzle_10",
-        "nozzle": 10,
-        "last_iteration": 886,
-        "last_mass_flow_kg_s": 0.081298773507,
-        "last_volume_flow_m3_h": 243.06584554870858,
-        "mean_mass_flow_kg_s": 0.08112252666438,
-        "mean_volume_flow_m3_h": 242.53890539969106,
-        "outlet_total_share_percent": 6.737231742389637,
-        "signed_deviation_from_outlet_mean_percent": 1.0584761358445567,
-        "signed_deviation_from_equal_inlet_share_percent": 1.0578772498714575,
-        "window_relative_span_percent": 0.4170924525068653,
-        "window_stability_passed": true
-      },
-      {
-        "outlet": "outlet_nozzle_11",
-        "nozzle": 11,
-        "last_iteration": 886,
-        "last_mass_flow_kg_s": 0.084423784814,
-        "last_volume_flow_m3_h": 252.40895717166347,
-        "mean_mass_flow_kg_s": 0.08411823076629,
-        "mean_volume_flow_m3_h": 251.4954162932016,
-        "outlet_total_share_percent": 6.986025186036862,
-        "signed_deviation_from_outlet_mean_percent": 4.790377790552937,
-        "signed_deviation_from_equal_inlet_share_percent": 4.789756788834188,
-        "window_relative_span_percent": 0.6033662327137234,
-        "window_stability_passed": false
-      },
-      {
-        "outlet": "outlet_nozzle_12",
-        "nozzle": 12,
-        "last_iteration": 886,
-        "last_mass_flow_kg_s": 0.080164875076,
-        "last_volume_flow_m3_h": 239.67573313977243,
-        "mean_mass_flow_kg_s": 0.07980423795506997,
-        "mean_volume_flow_m3_h": 238.59750572066432,
-        "outlet_total_share_percent": 6.627747769155638,
-        "signed_deviation_from_outlet_mean_percent": -0.5837834626654352,
-        "signed_deviation_from_equal_inlet_share_percent": -0.5843726163896885,
-        "window_relative_span_percent": 0.7247009993699823,
-        "window_stability_passed": false
-      },
-      {
-        "outlet": "outlet_nozzle_13",
-        "nozzle": 13,
-        "last_iteration": 886,
-        "last_mass_flow_kg_s": 0.08059952674,
-        "last_volume_flow_m3_h": 240.97524812224898,
-        "mean_mass_flow_kg_s": 0.08063884590028002,
-        "mean_volume_flow_m3_h": 241.09280395399725,
-        "outlet_total_share_percent": 6.6970620197359105,
-        "signed_deviation_from_outlet_mean_percent": 0.45593029603866503,
-        "signed_deviation_from_equal_inlet_share_percent": 0.45533498083236745,
-        "window_relative_span_percent": 0.18738918980422098,
-        "window_stability_passed": true
-      },
-      {
-        "outlet": "outlet_nozzle_14",
-        "nozzle": 14,
-        "last_iteration": 886,
-        "last_mass_flow_kg_s": 0.082113419832,
-        "last_volume_flow_m3_h": 245.5014628313263,
-        "mean_mass_flow_kg_s": 0.08241818504003998,
-        "mean_volume_flow_m3_h": 246.412645248853,
-        "outlet_total_share_percent": 6.844836264767295,
-        "signed_deviation_from_outlet_mean_percent": 2.6725439715094232,
-        "signed_deviation_from_equal_inlet_share_percent": 2.671935520355615,
-        "window_relative_span_percent": 0.6813346080445595,
-        "window_stability_passed": false
-      },
-      {
-        "outlet": "outlet_nozzle_15",
-        "nozzle": 15,
-        "last_iteration": 886,
-        "last_mass_flow_kg_s": 0.083934340779,
-        "last_volume_flow_m3_h": 250.94562478564904,
-        "mean_mass_flow_kg_s": 0.08402591543484998,
-        "mean_volume_flow_m3_h": 251.21941330907728,
-        "outlet_total_share_percent": 6.978358391043407,
-        "signed_deviation_from_outlet_mean_percent": 4.675375865651101,
-        "signed_deviation_from_equal_inlet_share_percent": 4.674755545449057,
-        "window_relative_span_percent": 0.22905063634710465,
-        "window_stability_passed": true
-      }
-    ]
+    "maximum_window_outlet_span_percent": 1.1716018724562625
   },
   "limitations": [
     "M04 solver-reported k NaN divergence",
     "M08 stopped by user; residual and stability criteria failed",
     "Both original mesh engineering checks failed",
     "No grid convergence study, experimental comparison, y+ verification or official final DAT readback"
-  ]
+  ],
+  "publication_redaction": "不公开逐出口列表或绝对流量，避免反推结构数量和截面尺寸；原始记录仅保留在私有项目中"
 }
