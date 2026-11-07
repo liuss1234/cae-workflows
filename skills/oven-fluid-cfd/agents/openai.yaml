@@ -1,0 +1,6 @@
+interface:
+  display_name: "烘箱供风 CFD"
+  short_description: "烘箱供风域保形清理、切割体边界层网格、QFlux求解诊断与逐风嘴流量验收"
+  default_prompt: "使用 $oven-fluid-cfd 处理烘箱供风腔和多排风嘴，按当前阶段完成几何、网格、求解或流量诊断，并说明实际验证边界。"
+policy:
+  allow_implicit_invocation: true

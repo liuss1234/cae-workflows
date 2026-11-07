@@ -1,0 +1,136 @@
+// 烘箱参数化模板：先在目标STAR版本做独立控制验证，再运行真实模型。
+package macro;
+import star.common.*;
+import star.base.neo.*;
+import star.base.report.*;
+import star.meshing.*;
+import star.prismmesher.*;
+import star.trimmer.*;
+import java.io.*;
+import java.util.*;
+
+public class MeshOven extends StarMacro {
+  // 可调参数集中在此处；长度单位m。每次更改网格参数应使用新版本目录。
+  private static final String ROOT=@ROOT@;
+  private static final String MESH=ROOT+"/mesh/@VERSION@";
+  private static final double BASE=@BASE@, PLENUM_SURFACE=@PLENUM_SURFACE@;
+  private static final double PLENUM_PRISM=@PLENUM_PRISM@, GAP_CORE=@GAP_CORE@;
+  private Simulation s;
+
+  private void surface(AutoMeshOperation op,Collection<PartSurface> patches,String name,double size,int layers,double thick,double minimum,boolean proximity){
+    // 仅控制对应物理壁面；入口和出口禁用棱柱层。
+    if(patches.isEmpty())throw new RuntimeException("Empty surface control "+name);
+    Units m=(Units)s.getUnitsManager().getObject("m");
+    SurfaceCustomMeshControl c=op.getCustomMeshControls().createSurfaceControl();
+    c.setPresentationName(name);c.getGeometryObjects().setObjects(patches);
+    c.getCustomConditions().get(PartsTargetSurfaceSizeOption.class).setSelected(PartsTargetSurfaceSizeOption.Type.CUSTOM);
+    c.getCustomConditions().get(PartsMinimumSurfaceSizeOption.class).setSelected(PartsMinimumSurfaceSizeOption.Type.CUSTOM);
+    c.getCustomValues().get(PartsTargetSurfaceSize.class).setAbsoluteSize(size,m);
+    c.getCustomValues().get(PartsMinimumSurfaceSize.class).setAbsoluteSize(minimum,m);
+    if(proximity){
+      c.getCustomConditions().get(PartsSurfaceProximityOption.class).setSelected(PartsSurfaceProximityOption.Type.CUSTOM_VALUES);
+      c.getCustomValues().get(SurfaceProximity.class).setNumPointsInGap(@PROXIMITY_POINTS@);
+      c.getCustomValues().get(PartsResurfacerSurfaceProximity.class).setSearchDirection(PartsResurfacerSurfaceProximity.SearchDirection.BOTH);
+    }else{
+      c.getCustomConditions().get(PartsSurfaceProximityOption.class).setSelected(PartsSurfaceProximityOption.Type.DISABLE);
+    }
+    PartsCustomizePrismMesh p=c.getCustomConditions().get(PartsCustomizePrismMesh.class);
+    if(layers==0){p.getCustomPrismOptions().setSelected(PartsCustomPrismsOption.Type.DISABLE);return;}
+    p.getCustomPrismOptions().setSelected(PartsCustomPrismsOption.Type.CUSTOMIZE);
+    p.getCustomPrismControls().setCustomizeNumLayers(true);
+    p.getCustomPrismControls().setCustomizeTotalThickness(true);
+    CustomPrismValuesManager values=c.getCustomValues().get(CustomPrismValuesManager.class);
+    values.getNumPrismLayers().setNumLayers(layers);values.getPrismThickness().setAbsoluteSize(thick,m);
+  }
+
+  private void volume(AutoMeshOperation op,String name,double[] low,double[] high,double size){
+    // 体积控制只约束切割体单元，不参与流体区域划分。
+    SimpleBlockPart box=s.get(MeshPartFactory.class).createNewBlockPart(s.get(SimulationPartManager.class));
+    box.setPresentationName(name);box.setCorners(new DoubleVector(low),new DoubleVector(high));
+    VolumeCustomMeshControl c=op.getCustomMeshControls().createVolumeControl();
+    c.setPresentationName(name);c.getGeometryObjects().setObjects(box);
+    c.getCustomConditions().get(VolumeControlTrimmerSizeOption.class).setVolumeSourceTrimmerSizeOption(true);
+    c.getCustomValues().get(VolumeControlSize.class).setAbsoluteSize(size,(Units)s.getUnitsManager().getObject("m"));
+  }
+
+  private double metric(Region region,String name,boolean minimum){
+    // 质量指标来自STAR原生场函数，保留原定义。
+    FieldFunction field=s.getFieldFunctionManager().getFunction(name);
+    if(minimum){MinReport r=s.getReportManager().createReport(MinReport.class);r.setFieldFunction(field);r.getParts().setObjects(region);return r.getReportMonitorValue();}
+    MaxReport r=s.getReportManager().createReport(MaxReport.class);r.setFieldFunction(field);r.getParts().setObjects(region);return r.getReportMonitorValue();
+  }
+
+  private void quality(Region region,long count)throws Exception{
+    try(PrintWriter out=new PrintWriter(ROOT+"/checks/@VERSION@_native_quality.json","UTF-8")){
+      out.printf(Locale.US,"{\"cells\":%d,\"zone\":\"fluid_supply\",\"quality\":{",count);
+      int i=0;
+      for(String name:new String[]{"CellQuality","Volume","SkewnessAngle","CellAspectRatio","FaceValidity","VolumeChange"}){
+        double low=metric(region,name,true),high=metric(region,name,false);
+        if(!Double.isFinite(low)||!Double.isFinite(high))throw new RuntimeException("Nonfinite "+name);
+        if(name.equals("Volume")&&low<=0)throw new RuntimeException("Nonpositive cell volume");
+        if(i++>0)out.print(",");out.printf(Locale.US,"\"%s\":{\"min\":%.15g,\"max\":%.15g}",name,low,high);
+        s.println("OVEN_QUALITY "+name+" min="+low+" max="+high);
+      }
+      out.println("}}");
+    }
+    for(Boundary b:region.getBoundaryManager().getBoundaries()){
+      if(!b.getPresentationName().startsWith("wall_"))continue;
+      XyzInternalTable table=s.getTableManager().createTable(XyzInternalTable.class);
+      table.getParts().setObjects(b);
+      table.setFieldFunctions(new NeoObjectVector(new Object[]{s.getFieldFunctionManager().getFunction("PrismLayerNumber"),s.getFieldFunctionManager().getFunction("FirstPrismLayerHeight")}));
+      table.setExtractVertexData(false);table.extract();
+      table.export(ROOT+"/checks/@VERSION@_"+b.getPresentationName()+"_layers.csv",",");
+    }
+  }
+
+  public void execute(){
+    s=getActiveSimulation();
+    if(new File(MESH).exists())throw new RuntimeException("Mesh stage already exists");
+    if(!new File(MESH).mkdirs())throw new RuntimeException("Cannot create mesh stage");
+    try{
+      Units m=(Units)s.getUnitsManager().getObject("m");
+      s.get(PartImportManager.class).importStlPart(@SURFACE@,"OneSurfacePerPatch",m,true,1e-9);
+      ArrayList<GeometryPart> parts=new ArrayList<GeometryPart>(s.get(SimulationPartManager.class).getLeafParts());
+      if(parts.size()!=1)throw new RuntimeException("Expected one fluid part, got "+parts.size());
+      GeometryPart fluid=parts.get(0);fluid.setPresentationName("fluid_supply");
+      Set<String> expected=new HashSet<String>(Arrays.asList(@PATCH_NAMES@));
+      Set<String> actual=new HashSet<String>();
+      for(PartSurface ps:((MeshPart)fluid).getPartSurfaces()){
+        if(!actual.add(ps.getPresentationName()))throw new RuntimeException("Duplicate patch");
+      }
+      if(!actual.equals(expected))throw new RuntimeException("Boundary name set mismatch");
+      s.getRegionManager().newRegionsFromParts(parts,"OneRegionPerPart","OneBoundaryPerPartSurface",false);
+      AutoMeshOperation op=s.get(MeshOperationManager.class).createAutoMeshOperation(new StringVector(new String[]{"star.resurfacer.ResurfacerAutoMesher","star.trimmer.TrimmerAutoMesher","star.prismmesher.PrismAutoMesher"}),parts);
+      op.setPresentationName("Oven_Trimmed_Prism_@VERSION@");op.setMeshInParallel(true);
+      for(Object mesher:op.getMeshers().getObjects()){
+        if(mesher instanceof star.resurfacer.ResurfacerAutoMesher){((star.resurfacer.ResurfacerAutoMesher)mesher).setDoProximityRefinement(true);((star.resurfacer.ResurfacerAutoMesher)mesher).setDoRetainGeometricFeatures(true);}
+        if(mesher instanceof TrimmerAutoMesher){((TrimmerAutoMesher)mesher).setPostOptimize(true);((TrimmerAutoMesher)mesher).setOptimizeBoundary(true);}
+        if(mesher instanceof PrismAutoMesher){PrismAutoMesher p=(PrismAutoMesher)mesher;p.setMinimumThickness(@MIN_PRISM@);p.setLayerChoppingPercentage(@REDUCTION@);p.setNearCoreLayerAspectRatio(@NEAR_CORE@);p.setGapFillPercentage(@GAP_FILL@);}
+      }
+      op.getDefaultValues().get(BaseSize.class).setValue(BASE);
+      op.getDefaultValues().get(NumPrismLayers.class).setNumLayers(1);
+      op.getDefaultValues().get(PrismLayerStretching.class).setStretching(@GROWTH@);
+      op.getDefaultValues().get(PrismThickness.class).setAbsoluteSize(PLENUM_PRISM,m);
+      op.getDefaultValues().get(SurfaceProximity.class).setNumPointsInGap(@PROXIMITY_POINTS@);
+      op.getDefaultValues().get(PartsResurfacerSurfaceProximity.class).setSearchDirection(PartsResurfacerSurfaceProximity.SearchDirection.INSIDE);
+      for(PartSurface ps:((MeshPart)fluid).getPartSurfaces()){
+        ArrayList<PartSurface> list=new ArrayList<PartSurface>();list.add(ps);String name=ps.getPresentationName();
+@SURFACE_CONTROLS@
+      }
+@SLOT_CONTROLS@
+      s.saveState(MESH+"/Oven_STAR_@VERSION@_mesh_setup.sim");s.println("OVEN_TRIMMED_MESH_STARTED");
+      op.execute();Region region=s.getRegionManager().getRegion("fluid_supply");
+      ElementCountReport report=s.getReportManager().createReport(ElementCountReport.class);report.getParts().setObjects(region);
+      long cells=Math.round(report.getReportMonitorValue());s.println("OVEN_CELL_COUNT "+cells);
+      s.saveState(MESH+"/Oven_STAR_N"+cells+"_@VERSION@_meshed.sim");
+      quality(region,cells);
+      s.getImportManager().setExportOptionDataFormat(ImportManager.CGNS_HDF5);
+      s.getImportManager().setExportOptionSolutionOnly(false);
+      s.getImportManager().export(MESH+"/mesh_m.cgns",s.getRegionManager().getRegions(),Collections.<FieldFunction>emptyList(),Collections.<FieldFunction>emptyList(),false);
+      try(PrintWriter w=new PrintWriter(ROOT+"/checks/@VERSION@_mesh_complete.json","UTF-8")){
+        w.printf(Locale.US,"{\"mesh_generated\":true,\"cells\":%d,\"mesher\":\"TrimmedCell\",\"units\":\"m\",\"quality_acceptance_pending\":true}%n",cells);
+      }
+      s.saveState(MESH+"/Oven_STAR_N"+cells+"_@VERSION@_meshed.sim");s.println("OVEN_TRIMMED_MESH_COMPLETE");
+    }catch(Exception e){try{s.saveState(MESH+"/Oven_@VERSION@_failed_diagnostic.sim");}catch(Exception ignored){}try(PrintWriter w=new PrintWriter(ROOT+"/checks/@VERSION@_mesh_error.txt","UTF-8")){e.printStackTrace(w);}catch(Exception ignored){}throw new RuntimeException(e);}
+  }
+}

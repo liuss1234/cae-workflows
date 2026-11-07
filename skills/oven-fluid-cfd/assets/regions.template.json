@@ -1,0 +1,273 @@
+{
+  "units": "m",
+  "zones": [
+    {
+      "name": "fluid_supply",
+      "kind": "fluid",
+      "region": "air",
+      "boundaries": [
+        {
+          "name": "outlet_nozzle_01",
+          "role": "pressure_outlet"
+        },
+        {
+          "name": "outlet_nozzle_02",
+          "role": "pressure_outlet"
+        },
+        {
+          "name": "outlet_nozzle_03",
+          "role": "pressure_outlet"
+        },
+        {
+          "name": "outlet_nozzle_04",
+          "role": "pressure_outlet"
+        },
+        {
+          "name": "outlet_nozzle_05",
+          "role": "pressure_outlet"
+        },
+        {
+          "name": "outlet_nozzle_06",
+          "role": "pressure_outlet"
+        },
+        {
+          "name": "outlet_nozzle_07",
+          "role": "pressure_outlet"
+        },
+        {
+          "name": "outlet_nozzle_08",
+          "role": "pressure_outlet"
+        },
+        {
+          "name": "outlet_nozzle_09",
+          "role": "pressure_outlet"
+        },
+        {
+          "name": "outlet_nozzle_10",
+          "role": "pressure_outlet"
+        },
+        {
+          "name": "outlet_nozzle_11",
+          "role": "pressure_outlet"
+        },
+        {
+          "name": "outlet_nozzle_12",
+          "role": "pressure_outlet"
+        },
+        {
+          "name": "outlet_nozzle_13",
+          "role": "pressure_outlet"
+        },
+        {
+          "name": "outlet_nozzle_14",
+          "role": "pressure_outlet"
+        },
+        {
+          "name": "outlet_nozzle_15",
+          "role": "pressure_outlet"
+        },
+        {
+          "name": "inlet_supply",
+          "role": "velocity_inlet"
+        },
+        {
+          "name": "wall_nozzle_01_baffles",
+          "role": "wall"
+        },
+        {
+          "name": "wall_nozzle_01_holes",
+          "role": "wall"
+        },
+        {
+          "name": "wall_nozzle_01_shell",
+          "role": "wall"
+        },
+        {
+          "name": "wall_nozzle_02_baffles",
+          "role": "wall"
+        },
+        {
+          "name": "wall_nozzle_02_holes",
+          "role": "wall"
+        },
+        {
+          "name": "wall_nozzle_02_shell",
+          "role": "wall"
+        },
+        {
+          "name": "wall_nozzle_03_baffles",
+          "role": "wall"
+        },
+        {
+          "name": "wall_nozzle_03_holes",
+          "role": "wall"
+        },
+        {
+          "name": "wall_nozzle_03_shell",
+          "role": "wall"
+        },
+        {
+          "name": "wall_nozzle_04_baffles",
+          "role": "wall"
+        },
+        {
+          "name": "wall_nozzle_04_holes",
+          "role": "wall"
+        },
+        {
+          "name": "wall_nozzle_04_shell",
+          "role": "wall"
+        },
+        {
+          "name": "wall_nozzle_05_baffles",
+          "role": "wall"
+        },
+        {
+          "name": "wall_nozzle_05_holes",
+          "role": "wall"
+        },
+        {
+          "name": "wall_nozzle_05_shell",
+          "role": "wall"
+        },
+        {
+          "name": "wall_nozzle_06_baffles",
+          "role": "wall"
+        },
+        {
+          "name": "wall_nozzle_06_holes",
+          "role": "wall"
+        },
+        {
+          "name": "wall_nozzle_06_shell",
+          "role": "wall"
+        },
+        {
+          "name": "wall_nozzle_07_baffles",
+          "role": "wall"
+        },
+        {
+          "name": "wall_nozzle_07_holes",
+          "role": "wall"
+        },
+        {
+          "name": "wall_nozzle_07_shell",
+          "role": "wall"
+        },
+        {
+          "name": "wall_nozzle_08_baffles",
+          "role": "wall"
+        },
+        {
+          "name": "wall_nozzle_08_holes",
+          "role": "wall"
+        },
+        {
+          "name": "wall_nozzle_08_shell",
+          "role": "wall"
+        },
+        {
+          "name": "wall_nozzle_09_baffles",
+          "role": "wall"
+        },
+        {
+          "name": "wall_nozzle_09_holes",
+          "role": "wall"
+        },
+        {
+          "name": "wall_nozzle_09_shell",
+          "role": "wall"
+        },
+        {
+          "name": "wall_nozzle_10_baffles",
+          "role": "wall"
+        },
+        {
+          "name": "wall_nozzle_10_holes",
+          "role": "wall"
+        },
+        {
+          "name": "wall_nozzle_10_shell",
+          "role": "wall"
+        },
+        {
+          "name": "wall_nozzle_11_baffles",
+          "role": "wall"
+        },
+        {
+          "name": "wall_nozzle_11_holes",
+          "role": "wall"
+        },
+        {
+          "name": "wall_nozzle_11_shell",
+          "role": "wall"
+        },
+        {
+          "name": "wall_nozzle_12_baffles",
+          "role": "wall"
+        },
+        {
+          "name": "wall_nozzle_12_holes",
+          "role": "wall"
+        },
+        {
+          "name": "wall_nozzle_12_shell",
+          "role": "wall"
+        },
+        {
+          "name": "wall_nozzle_13_baffles",
+          "role": "wall"
+        },
+        {
+          "name": "wall_nozzle_13_holes",
+          "role": "wall"
+        },
+        {
+          "name": "wall_nozzle_13_shell",
+          "role": "wall"
+        },
+        {
+          "name": "wall_nozzle_14_baffles",
+          "role": "wall"
+        },
+        {
+          "name": "wall_nozzle_14_holes",
+          "role": "wall"
+        },
+        {
+          "name": "wall_nozzle_14_shell",
+          "role": "wall"
+        },
+        {
+          "name": "wall_nozzle_15_baffles",
+          "role": "wall"
+        },
+        {
+          "name": "wall_nozzle_15_holes",
+          "role": "wall"
+        },
+        {
+          "name": "wall_nozzle_15_shell",
+          "role": "wall"
+        },
+        {
+          "name": "wall_nozzle_connections",
+          "role": "wall"
+        },
+        {
+          "name": "wall_plenum",
+          "role": "wall"
+        },
+        {
+          "name": "wall_plenum_guides",
+          "role": "wall"
+        },
+        {
+          "name": "wall_plenum_holes",
+          "role": "wall"
+        }
+      ]
+    }
+  ],
+  "interfaces": []
+}
