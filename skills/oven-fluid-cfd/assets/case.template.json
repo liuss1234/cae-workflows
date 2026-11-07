@@ -2,12 +2,25 @@
   "schema_version": 1,
   "name": "oven_new_case",
   "scenario": "single_fluid_internal_flow",
-  "description": "待填写的新烘箱供风案例；历史示例参数不能自动视为新项目工况",
+  "description": "待填写的新烘箱供风案例；公开模板不含真实结构数量和尺寸，参数按项目填写",
   "geometry": {
     "source": "cad/source.step",
     "length_units": null,
     "solid": "cad/fluid.brep",
-    "return_air_included": null
+    "return_air_included": null,
+    "structure_types": [
+      "供风腔",
+      "风嘴",
+      "V形嘴",
+      "孔板",
+      "供风孔",
+      "喷缝",
+      "导流板",
+      "挡片",
+      "腰形孔",
+      "供风侧连接段",
+      "上部过渡"
+    ]
   },
   "physics": {
     "energy": false,
@@ -39,268 +52,22 @@
     "input_units": "m",
     "generator": "STAR_CCM_trimmed_cell",
     "version": "M01",
-    "base_size_m": 0.02,
-    "plenum_surface_size_m": 0.006,
-    "slot_core_size_m": 0.0025,
-    "other_wall_total_thickness_m": 0.001,
+    "base_size_m": null,
+    "plenum_surface_size_m": null,
+    "slot_core_size_m": null,
+    "other_wall_total_thickness_m": null,
     "prism_growth": 1.2,
     "grid_convergence_study": false,
-    "exchange_surface_method": "OCC_chordal_deflection_0p05mm_angle_0p25rad",
+    "exchange_surface_method": null,
     "surface_proximity_search": "disabled_except_local_guides_BOTH_1p5",
     "surface_remesher": true,
-    "minimum_surface_size_m": 0.0005,
-    "wall_layer_spec": {
-      "wall_nozzle_01_baffles": {
-        "layers": 2,
-        "total_thickness_m": 0.0002,
-        "surface_size_m": 0.001
-      },
-      "wall_nozzle_01_holes": {
-        "layers": 2,
-        "total_thickness_m": 0.0002,
-        "surface_size_m": 0.001
-      },
-      "wall_nozzle_01_shell": {
-        "layers": 2,
-        "total_thickness_m": 0.0004,
-        "surface_size_m": 0.003
-      },
-      "wall_nozzle_02_baffles": {
-        "layers": 2,
-        "total_thickness_m": 0.0002,
-        "surface_size_m": 0.001
-      },
-      "wall_nozzle_02_holes": {
-        "layers": 2,
-        "total_thickness_m": 0.0002,
-        "surface_size_m": 0.001
-      },
-      "wall_nozzle_02_shell": {
-        "layers": 2,
-        "total_thickness_m": 0.0004,
-        "surface_size_m": 0.003
-      },
-      "wall_nozzle_03_baffles": {
-        "layers": 2,
-        "total_thickness_m": 0.0002,
-        "surface_size_m": 0.001
-      },
-      "wall_nozzle_03_holes": {
-        "layers": 2,
-        "total_thickness_m": 0.0002,
-        "surface_size_m": 0.001
-      },
-      "wall_nozzle_03_shell": {
-        "layers": 2,
-        "total_thickness_m": 0.0004,
-        "surface_size_m": 0.003
-      },
-      "wall_nozzle_04_baffles": {
-        "layers": 2,
-        "total_thickness_m": 0.0002,
-        "surface_size_m": 0.001
-      },
-      "wall_nozzle_04_holes": {
-        "layers": 2,
-        "total_thickness_m": 0.0002,
-        "surface_size_m": 0.001
-      },
-      "wall_nozzle_04_shell": {
-        "layers": 2,
-        "total_thickness_m": 0.0004,
-        "surface_size_m": 0.003
-      },
-      "wall_nozzle_05_baffles": {
-        "layers": 2,
-        "total_thickness_m": 0.0002,
-        "surface_size_m": 0.001
-      },
-      "wall_nozzle_05_holes": {
-        "layers": 2,
-        "total_thickness_m": 0.0002,
-        "surface_size_m": 0.001
-      },
-      "wall_nozzle_05_shell": {
-        "layers": 2,
-        "total_thickness_m": 0.0004,
-        "surface_size_m": 0.003
-      },
-      "wall_nozzle_06_baffles": {
-        "layers": 2,
-        "total_thickness_m": 0.0002,
-        "surface_size_m": 0.001
-      },
-      "wall_nozzle_06_holes": {
-        "layers": 2,
-        "total_thickness_m": 0.0002,
-        "surface_size_m": 0.001
-      },
-      "wall_nozzle_06_shell": {
-        "layers": 2,
-        "total_thickness_m": 0.0004,
-        "surface_size_m": 0.003
-      },
-      "wall_nozzle_07_baffles": {
-        "layers": 2,
-        "total_thickness_m": 0.0002,
-        "surface_size_m": 0.001
-      },
-      "wall_nozzle_07_holes": {
-        "layers": 2,
-        "total_thickness_m": 0.0002,
-        "surface_size_m": 0.001
-      },
-      "wall_nozzle_07_shell": {
-        "layers": 2,
-        "total_thickness_m": 0.0004,
-        "surface_size_m": 0.003
-      },
-      "wall_nozzle_08_baffles": {
-        "layers": 2,
-        "total_thickness_m": 0.0002,
-        "surface_size_m": 0.001
-      },
-      "wall_nozzle_08_holes": {
-        "layers": 2,
-        "total_thickness_m": 0.0002,
-        "surface_size_m": 0.001
-      },
-      "wall_nozzle_08_shell": {
-        "layers": 2,
-        "total_thickness_m": 0.0004,
-        "surface_size_m": 0.003
-      },
-      "wall_nozzle_09_baffles": {
-        "layers": 2,
-        "total_thickness_m": 0.0002,
-        "surface_size_m": 0.001
-      },
-      "wall_nozzle_09_holes": {
-        "layers": 2,
-        "total_thickness_m": 0.0002,
-        "surface_size_m": 0.001
-      },
-      "wall_nozzle_09_shell": {
-        "layers": 2,
-        "total_thickness_m": 0.0004,
-        "surface_size_m": 0.003
-      },
-      "wall_nozzle_10_baffles": {
-        "layers": 2,
-        "total_thickness_m": 0.0002,
-        "surface_size_m": 0.001
-      },
-      "wall_nozzle_10_holes": {
-        "layers": 2,
-        "total_thickness_m": 0.0002,
-        "surface_size_m": 0.001
-      },
-      "wall_nozzle_10_shell": {
-        "layers": 2,
-        "total_thickness_m": 0.0004,
-        "surface_size_m": 0.003
-      },
-      "wall_nozzle_11_baffles": {
-        "layers": 2,
-        "total_thickness_m": 0.0002,
-        "surface_size_m": 0.001
-      },
-      "wall_nozzle_11_holes": {
-        "layers": 2,
-        "total_thickness_m": 0.0002,
-        "surface_size_m": 0.001
-      },
-      "wall_nozzle_11_shell": {
-        "layers": 2,
-        "total_thickness_m": 0.0004,
-        "surface_size_m": 0.003
-      },
-      "wall_nozzle_12_baffles": {
-        "layers": 2,
-        "total_thickness_m": 0.0002,
-        "surface_size_m": 0.001
-      },
-      "wall_nozzle_12_holes": {
-        "layers": 2,
-        "total_thickness_m": 0.0002,
-        "surface_size_m": 0.001
-      },
-      "wall_nozzle_12_shell": {
-        "layers": 2,
-        "total_thickness_m": 0.0004,
-        "surface_size_m": 0.003
-      },
-      "wall_nozzle_13_baffles": {
-        "layers": 2,
-        "total_thickness_m": 0.0002,
-        "surface_size_m": 0.001
-      },
-      "wall_nozzle_13_holes": {
-        "layers": 2,
-        "total_thickness_m": 0.0002,
-        "surface_size_m": 0.001
-      },
-      "wall_nozzle_13_shell": {
-        "layers": 2,
-        "total_thickness_m": 0.0004,
-        "surface_size_m": 0.003
-      },
-      "wall_nozzle_14_baffles": {
-        "layers": 2,
-        "total_thickness_m": 0.0002,
-        "surface_size_m": 0.001
-      },
-      "wall_nozzle_14_holes": {
-        "layers": 2,
-        "total_thickness_m": 0.0002,
-        "surface_size_m": 0.001
-      },
-      "wall_nozzle_14_shell": {
-        "layers": 2,
-        "total_thickness_m": 0.0004,
-        "surface_size_m": 0.003
-      },
-      "wall_nozzle_15_baffles": {
-        "layers": 2,
-        "total_thickness_m": 0.0002,
-        "surface_size_m": 0.001
-      },
-      "wall_nozzle_15_holes": {
-        "layers": 2,
-        "total_thickness_m": 0.0002,
-        "surface_size_m": 0.001
-      },
-      "wall_nozzle_15_shell": {
-        "layers": 2,
-        "total_thickness_m": 0.0004,
-        "surface_size_m": 0.003
-      },
-      "wall_nozzle_connections": {
-        "layers": 2,
-        "total_thickness_m": 0.0004,
-        "surface_size_m": 0.003
-      },
-      "wall_plenum": {
-        "layers": 1,
-        "total_thickness_m": 0.001,
-        "surface_size_m": 0.006
-      },
-      "wall_plenum_guides": {
-        "layers": 2,
-        "total_thickness_m": 0.0003,
-        "surface_size_m": 0.002
-      },
-      "wall_plenum_holes": {
-        "layers": 1,
-        "total_thickness_m": 0.0003,
-        "surface_size_m": 0.0015
-      }
-    },
+    "minimum_surface_size_m": null,
+    "wall_layer_spec": {},
     "minimum_prism_thickness_percent": 1.0,
     "prism_layer_reduction_percent": 1.0,
     "near_core_layer_aspect_ratio": 0.0,
     "prism_gap_fill_percent": 40.0,
-    "guide_minimum_surface_size_m": 0.00025,
+    "guide_minimum_surface_size_m": null,
     "slot_boxes_m": [],
     "slot_boxes_required": true,
     "guide_proximity_points_in_gap": 1.5
@@ -318,7 +85,7 @@
     "qfx": "oven.qfx"
   },
   "validation": {
-    "bbox_tolerance_m": 1e-06,
+    "bbox_tolerance_m": null,
     "max_volume_error_fraction": 0.005,
     "max_skewness_angle_deg": 85.0,
     "min_face_validity": 0.95,
@@ -327,9 +94,9 @@
     "monitor_stability_window_iterations": 100,
     "monitor_stability_relative": 0.005,
     "residual": 1e-05,
-    "cad_bbox_tolerance_m": 0.001,
+    "cad_bbox_tolerance_m": null,
     "minimum_full_prism_layer_area_fraction": 0.95,
-    "cad_bbox_tolerance_basis": "Declared 1 mm CAD-to-trimmed boundary envelope tolerance; CAD volume independently <=0.5 percent; identical-grid cross-software import <=1 um"
+    "cad_bbox_tolerance_basis": null
   },
   "post": {
     "zones": [
@@ -370,7 +137,7 @@
     }
   ],
   "workflow": {
-    "outlet_count": 15,
+    "outlet_count": null,
     "scope_confirmed": false,
     "geometry_units_confirmed": false,
     "assumptions_confirmed": false,

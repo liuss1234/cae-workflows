@@ -4,6 +4,14 @@ All notable repository-level changes are recorded here. Releases follow Semantic
 
 ## Unreleased
 
+## v1.0.1 - 2026-11-07
+
+### Changed
+
+- Redact real oven geometry dimensions, component counts, topology statistics, enumerated boundaries and outlet tables from the public skill.
+- Leave geometry-related template lengths and boundary lists unfilled; use independent synthetic fixtures for self-tests.
+- Keep structure types, reusable methods and relative diagnostic conclusions; private engineering inputs and results remain unchanged.
+
 ## v1.0.0 - 2026-11-07
 
 ### Added
