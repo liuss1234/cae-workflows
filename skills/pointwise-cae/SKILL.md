@@ -1,6 +1,8 @@
 ---
 name: pointwise-cae
 description: 基于公开 Pointwise 翼型教程，规划 NACA0012 几何、C-H 结构网格、T-Rex 边界层和局部加密；适用于 Pointwise 入门与网格策略审查，不包含商业软件安装或许可绕过。
+metadata:
+  version: "1.0.0"
 ---
 
 # Pointwise CAE 经验工作流

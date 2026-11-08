@@ -1,6 +1,8 @@
 ---
 name: tecplot-cae
 description: 基于公开 Tecplot 经验，处理 Fluent 三维数据分开导出、局部切面云图和局部三维流线；适用于 Tecplot 360 后处理组织与显示，不把插值或消隐当作物理验证。
+metadata:
+  version: "1.0.0"
 ---
 
 # Tecplot CAE 经验工作流
