@@ -16,8 +16,9 @@ All notable repository-level changes are recorded here. Releases follow Semantic
 
 ### Added
 
+- Add software-specific Fluent, Pointwise, and Tecplot CAE skills based on publicly accessible CFD workflow topics, with source links and validation boundaries.
+- Allow packaging selected workflow ZIPs without rebuilding unrelated packages.
 - Oven supply-flow skill covering geometry decisions, STAR prism-layer evidence, QFlux/Slurm diagnostics and synchronized outlet statistics.
-
 - A single workflow registry for documentation, validation, and packaging.
 - Standard repository tests, lint configuration, contribution templates, and maintenance guidance.
 
