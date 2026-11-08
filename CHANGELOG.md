@@ -6,6 +6,8 @@ All notable repository-level changes are recorded here. Releases follow Semantic
 
 ### Added
 
+- Add software-specific Fluent, Pointwise, and Tecplot CAE skills based on publicly accessible CFD workflow topics, with source links and validation boundaries.
+- Allow packaging selected workflow ZIPs without rebuilding unrelated packages.
 - A single workflow registry for documentation, validation, and packaging.
 - Standard repository tests, lint configuration, contribution templates, and maintenance guidance.
 

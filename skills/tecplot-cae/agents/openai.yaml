@@ -1,0 +1,4 @@
+interface:
+  display_name: "Tecplot CAE 经验"
+  short_description: "Tecplot 局部切面、三维流线与 Fluent 数据组织"
+  default_prompt: "使用 $tecplot-cae，按源数据和变量结构整理 Tecplot 三维导出、局部切面或局部流线，并明确插值与显示操作的限制。"

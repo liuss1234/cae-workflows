@@ -1,0 +1,4 @@
+interface:
+  display_name: "Pointwise CAE 经验"
+  short_description: "Pointwise 翼型、C-H 网格、T-Rex 边界层与局部加密"
+  default_prompt: "使用 $pointwise-cae，按目标 y+、外场范围和求解器需求规划 Pointwise 翼型网格，并检查实际拓扑、边界层和质量限制。"

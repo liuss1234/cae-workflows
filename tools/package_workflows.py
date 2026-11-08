@@ -35,24 +35,27 @@ def main():
     """每次创建全新输出目录；所有 ZIP 在生成后由公共打包器独立回读。"""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, required=True, help="尚不存在的新输出目录")
+    parser.add_argument("--workflow", action="append", choices=WORKFLOWS,
+                        help="只打包指定工作流；可重复使用，默认打包全部")
     args = parser.parse_args()
     output = args.output.expanduser().resolve()
     if output.exists():
         raise FileExistsError("输出目录已存在，请选择新目录：" + str(output))
     # 先检查全部输入，再创建输出，减少无效输入留下的半成品。
-    resources = {name: collect_resources(REPOSITORY / "skills" / name) for name in WORKFLOWS}
+    selected = tuple(dict.fromkeys(args.workflow or WORKFLOWS))
+    resources = {name: collect_resources(REPOSITORY / "skills" / name) for name in selected}
     output.mkdir(parents=True)
     packer = REPOSITORY / "skills" / "cfd-case-workflow" / "scripts" / "package_artifacts.py"
     environment = os.environ.copy()
     environment["PYTHONUTF8"] = "1"
     with tempfile.TemporaryDirectory(prefix="cae-manifests-") as temporary:
-        for name in WORKFLOWS:
+        for name in selected:
             manifest = Path(temporary) / (name + ".json")
             manifest.write_text(json.dumps({"files": resources[name]}, ensure_ascii=False), encoding="utf-8")
             command = [sys.executable, str(packer), "create", "--root", str(REPOSITORY / "skills" / name),
                        "--manifest", str(manifest), "--output", str(output / (name + ".zip")), "--prefix", name]
             subprocess.run(command, check=True, env=environment)
-    print("已生成并验证 %d 个工作流包：%s" % (len(WORKFLOWS), output))
+    print("已生成并验证 %d 个工作流包：%s" % (len(selected), output))
 
 
 if __name__ == "__main__":

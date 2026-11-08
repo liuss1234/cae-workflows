@@ -2,6 +2,24 @@
   "schema_version": 1,
   "workflows": [
     {
+      "name": "fluent-cae",
+      "summary": "Fluent 经验工作流：局部区域统计、边界条件复用和跨网格初场插值",
+      "boundary": "面向公开 CFD 经验的可迁移操作整理；菜单、TUI 和变量名称需按 Fluent 版本复核",
+      "cli_entries": []
+    },
+    {
+      "name": "pointwise-cae",
+      "summary": "Pointwise 经验工作流：NACA0012 几何、C-H 结构网格、T-Rex 边界层和局部加密",
+      "boundary": "用于公开翼型教学和网格策略整理；不包含商业软件安装包、许可配置或产品网格验收结论",
+      "cli_entries": []
+    },
+    {
+      "name": "tecplot-cae",
+      "summary": "Tecplot 经验工作流：Fluent 三维数据分开导出、局部切面和局部三维流线",
+      "boundary": "面向后处理显示与数据组织；插值和消隐不等于增加物理精度或裁剪原始求解数据",
+      "cli_entries": []
+    },
+    {
       "name": "fan-cfd",
       "summary": "风扇行业入口：几何清理、流体分区、STAR/Gmsh 网格、QFlux MRF 计算及风量/云图交付",
       "boundary": "单转子多区多接口适配；具体几何、软件版本及物理有效性需按案例验证",

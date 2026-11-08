@@ -1,0 +1,4 @@
+interface:
+  display_name: "Fluent CAE 经验"
+  short_description: "Fluent 局部统计、设置复用与跨网格初场插值"
+  default_prompt: "使用 $fluent-cae，按 Fluent 版本和案例边界检查，处理局部区域统计、边界条件复用或跨网格初场插值，并明确验证限制。"
