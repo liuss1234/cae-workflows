@@ -75,7 +75,12 @@ def check_sources():
     if readme != expected_readme(readme, WORKFLOW_RECORDS):
         raise ValueError("README 工作流表已过期，请执行 python tools/update_readme.py")
     for name in WORKFLOWS:
-        content = (REPOSITORY / "skills" / name / "SKILL.md").read_text(encoding="utf-8-sig")
+        path = REPOSITORY / "skills" / name / "SKILL.md"
+        raw = path.read_bytes()
+        # 孤立 CR 不是换行：部分宿主解析器会把 name 与 description 拼成一行。
+        if b"\r" in raw.replace(b"\r\n", b""):
+            raise ValueError("技能文件含孤立 CR 换行：" + name)
+        content = raw.decode("utf-8-sig")
         match = re.match(r"\A---\s*\n(.*?)\n---(?:\s*\n|$)", content, re.DOTALL)
         if not match:
             raise ValueError("技能缺少标准 YAML 头部：" + name)

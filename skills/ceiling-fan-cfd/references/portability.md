@@ -1,6 +1,6 @@
 # 安装与文件契约
 
-整个技能文件夹放到Codex skills目录即可发现。脚本不依赖原作者盘符/用户名；普通工具Python3.9+，历史分析/打包仅用标准库；多面体检查需numpy/h5py，Gmsh/FreeCAD/STAR/QFlux各自安装。QFlux脚本使用兼容API的Python（已验证Windows CPython3.8 x64），不从PyPI获取厂商DLL。
+整个技能文件夹放到宿主技能目录即可发现：Codex 为 `~/.codex/skills/`（或 `$CODEX_HOME/skills/`），DeepSeek Harness 为 `~/.dsh/skills/`（或 `$DSH_HOME/skills/`）。脚本不依赖原作者盘符/用户名；普通工具Python3.9+，历史分析/打包仅用标准库；多面体检查需numpy/h5py，Gmsh/FreeCAD/STAR/QFlux各自安装。QFlux脚本使用兼容API的Python（已验证Windows CPython3.8 x64），不从PyPI获取厂商DLL。
 
 普通环境可安装 `python -m pip install -r assets/requirements.txt`。FreeCAD脚本使用能够 `import FreeCAD, Part` 的解释器；STAR宏由匹配版本的STAR执行，QFlux用其API匹配的独立解释器。`assets/environment.example.json`仅记录这些本机安装位置，不随案例自动安装商业软件。
 

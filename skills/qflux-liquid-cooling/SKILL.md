@@ -1,5 +1,6 @@
 ---
-name: qflux-liquid-coolingdescription: "使用 FreeCAD、Gmsh 和 TF-QFLUX 建立多支路液冷管路水力 CFD 案例，支持 Windows 本地或 SSH 求解、米制命名网格、原生工程回读、收敛核验及支路偏流后处理。附可配置演示脚本，不自动包含共轭换热或真实产品冷板结构。"
+name: qflux-liquid-cooling
+description: "使用 FreeCAD、Gmsh 和 TF-QFLUX 建立多支路液冷管路水力 CFD 案例，支持 Windows 本地或 SSH 求解、米制命名网格、原生工程回读、收敛核验及支路偏流后处理。附可配置演示脚本，不自动包含共轭换热或真实产品冷板结构。"
 metadata:
   version: "1.1.0"
 ---

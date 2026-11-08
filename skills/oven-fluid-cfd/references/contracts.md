@@ -1,6 +1,6 @@
 # 安装、工具、数据契约
 
-复制整个oven-fluid-cfd目录到Codex技能目录，保留相对结构；也可直接运行scripts。Python3.8+，合成自检不需要商业软件。独立技能不依赖其他技能安装；可用时结合cfd-case-workflow/qflux-slurm，但不能假定存在。
+复制整个oven-fluid-cfd目录到宿主技能目录（Codex `~/.codex/skills/` 或 `$CODEX_HOME/skills/`，DeepSeek Harness `~/.dsh/skills/` 或 `$DSH_HOME/skills/`），保留相对结构；也可直接运行scripts。Python3.8+，合成自检不需要商业软件。独立技能不依赖其他技能安装；可用时结合cfd-case-workflow/qflux-slurm，但不能假定存在。
 
 ## 新案例
 
