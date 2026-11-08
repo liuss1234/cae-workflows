@@ -7,10 +7,11 @@ All notable repository-level changes are recorded here. Releases follow Semantic
 ### Added
 
 - `tools/install_skills.py` installs any subset of `skills/` into the Codex or DeepSeek Harness skill root, verifies that each `SKILL.md` name matches its directory, and skips existing targets unless `--force` is given.
+- Record the `fluent-cae`, `pointwise-cae` and `tecplot-cae` software-specific skills in the registry and this changelog.
 
 ### Fixed
 
-- Add the missing `metadata.version` to `fan-cfd` so all eight skills declare a version.
+- Declare `metadata.version` for `fan-cfd`, `fluent-cae`, `pointwise-cae` and `tecplot-cae` so every skill records a version.
 - Replace a lone carriage return in `qflux-liquid-cooling/SKILL.md` that merged `name` and `description` for hosts whose loader only splits on line feeds; repository checks and tests now reject lone CR bytes in skill entry points.
 
 ### Changed

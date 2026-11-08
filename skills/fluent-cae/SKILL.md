@@ -1,6 +1,8 @@
 ---
 name: fluent-cae
 description: 基于公开 Fluent 经验，处理局部区域统计、边界条件复用和跨网格初场插值；适用于 Fluent 设置排查与后处理工作流，不替代版本匹配、网格质量和收敛验收。
+metadata:
+  version: "1.0.0"
 ---
 
 # Fluent CAE 经验工作流
