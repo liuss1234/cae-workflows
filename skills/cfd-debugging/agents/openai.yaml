@@ -1,0 +1,4 @@
+interface:
+  display_name: "CFD 调试经验"
+  short_description: "求解发散、收敛异常、网格质量与边界条件错误的诊断排查"
+  default_prompt: "使用 $cfd-debugging，按现象定位这次 CFD 求解异常的原因，并给出可验证的修复步骤。"
