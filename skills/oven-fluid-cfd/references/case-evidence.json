@@ -1,0 +1,74 @@
+{
+  "date": "2026-11-07",
+  "source": "私有项目独立几何/网格/工程回读报告及求解日志和同步开口监控；公开仅定性过程与相对诊断摘要",
+  "not_public_reproduction_input": true,
+  "geometry": {
+    "structure_types": [
+      "供风腔",
+      "风嘴",
+      "V形嘴",
+      "孔板",
+      "供风孔",
+      "喷缝",
+      "导流板",
+      "挡片",
+      "腰形孔",
+      "供风侧连接段",
+      "上部过渡"
+    ],
+    "excluded_space": "中央敞开回风空间",
+    "public_scope": "仅列结构类型；不公开真实结构数量、尺寸、拓扑统计或逐部件清单"
+  },
+  "cases": {
+    "M04": {
+      "iteration": 43,
+      "scheduler_state": "FAILED",
+      "residuals": {
+        "continuity": 2087000000000000.0,
+        "U.x": 0.65796,
+        "U.y": 0.67656,
+        "U.z": 0.26239,
+        "epsilon": 2.3168e-12,
+        "k": 0.80542
+      },
+      "mesh_quality_passed": false
+    },
+    "M08": {
+      "iteration": 887,
+      "scheduler_state": "COMPLETED",
+      "residuals": {
+        "continuity": 0.035557,
+        "U.x": 0.021719,
+        "U.y": 0.010772,
+        "U.z": 0.010527,
+        "epsilon": 0.045628,
+        "k": 0.065919
+      },
+      "mesh_quality_passed": false
+    }
+  },
+  "M08_saved_data": {
+    "iteration": 887,
+    "recombine_and_exit_log_verified": true,
+    "exit_code": "0:0",
+    "official_field_readback_performed": false
+  },
+  "M08_statistics": {
+    "density_kg_m3": 1.2041,
+    "window_start_iteration": 787,
+    "window_end_iteration": 886,
+    "window_samples": 100,
+    "mean_net_mass_error_percent": 0.0005926133027075245,
+    "maximum_window_mass_error_percent": 0.0017669001743816953,
+    "distribution_cv_percent": 2.9433812018684207,
+    "maximum_absolute_deviation_percent": 4.82313778114175,
+    "maximum_window_outlet_span_percent": 1.1716018724562625
+  },
+  "limitations": [
+    "M04 solver-reported k NaN divergence",
+    "M08 stopped by user; residual and stability criteria failed",
+    "Both original mesh engineering checks failed",
+    "No grid convergence study, experimental comparison, y+ verification or official final DAT readback"
+  ],
+  "publication_redaction": "不公开逐出口列表或绝对流量，避免反推结构数量和截面尺寸；原始记录仅保留在私有项目中"
+}

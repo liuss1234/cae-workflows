@@ -20,6 +20,27 @@
       "cli_entries": []
     },
     {
+      "name": "oven-fluid-cfd",
+      "summary": "烘箱供风域抽取、保形简化、挡片恢复、STAR切割体层覆盖、QFlux/Slurm诊断及逐出口风量统计",
+      "boundary": "供风腔与多排风嘴；附真实失败/未收敛记录，不代替传热、回风全域或精度验证",
+      "cli_entries": [
+        "oven_case",
+        "cad_audit",
+        "render_star_macro",
+        "check_trimmed_mesh",
+        "qflux_case",
+        "qflux_oven",
+        "analyze_outlets",
+        "self_test"
+      ],
+      "self_test": "scripts/self_test.py",
+      "required_package_files": [
+        "assets/MeshOven.java.in",
+        "references/case-evidence.json",
+        "LICENSE.txt"
+      ]
+    },
+    {
       "name": "fan-cfd",
       "summary": "风扇行业入口：几何清理、流体分区、STAR/Gmsh 网格、QFlux MRF 计算及风量/云图交付",
       "boundary": "单转子多区多接口适配；具体几何、软件版本及物理有效性需按案例验证",

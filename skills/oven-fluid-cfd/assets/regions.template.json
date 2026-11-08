@@ -1,0 +1,12 @@
+{
+  "units": "m",
+  "zones": [
+    {
+      "name": "fluid_supply",
+      "kind": "fluid",
+      "region": "air",
+      "boundaries": []
+    }
+  ],
+  "interfaces": []
+}

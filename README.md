@@ -1,6 +1,6 @@
 # cae-workflows · 可复用 CAE 工作流
 
-面向 FreeCAD、Gmsh、TF-QFLUX 和 Slurm 的可迁移 CAE 技能包。仓库重点是 CFD 前处理、风扇与液冷案例、求解验收和可追溯交付；商业软件、许可证、客户模型和本机配置不随仓库分发。
+面向 FreeCAD、Gmsh、TF-QFLUX 和 Slurm 的可迁移 CAE 技能包。仓库重点是 CFD 前处理、烘箱供风、风扇与液冷案例、求解验收和可追溯交付；商业软件、许可证、客户模型和本机配置不随仓库分发。
 
 ## 工作流选择
 
@@ -10,6 +10,7 @@
 | [fluent-cae](skills/fluent-cae/SKILL.md) | Fluent 经验工作流：局部区域统计、边界条件复用和跨网格初场插值 | 面向公开 CFD 经验的可迁移操作整理；菜单、TUI 和变量名称需按 Fluent 版本复核 |
 | [pointwise-cae](skills/pointwise-cae/SKILL.md) | Pointwise 经验工作流：NACA0012 几何、C-H 结构网格、T-Rex 边界层和局部加密 | 用于公开翼型教学和网格策略整理；不包含商业软件安装包、许可配置或产品网格验收结论 |
 | [tecplot-cae](skills/tecplot-cae/SKILL.md) | Tecplot 经验工作流：Fluent 三维数据分开导出、局部切面和局部三维流线 | 面向后处理显示与数据组织；插值和消隐不等于增加物理精度或裁剪原始求解数据 |
+| [oven-fluid-cfd](skills/oven-fluid-cfd/SKILL.md) | 烘箱供风域抽取、保形简化、挡片恢复、STAR切割体层覆盖、QFlux/Slurm诊断及逐出口风量统计 | 供风腔与多排风嘴；附真实失败/未收敛记录，不代替传热、回风全域或精度验证 |
 | [fan-cfd](skills/fan-cfd/SKILL.md) | 风扇行业入口：几何清理、流体分区、STAR/Gmsh 网格、QFlux MRF 计算及风量/云图交付 | 单转子多区多接口适配；具体几何、软件版本及物理有效性需按案例验证 |
 | [cfd-case-workflow](skills/cfd-case-workflow/SKILL.md) | 通用入口：几何、网格、QFX、VOF/UDF 初始相、求解、场导出、验收和打包 | 自动设置限单流体稳态等温；高级物理按目标软件能力和单独证据适配 |
 | [cfd-preprocessing](skills/cfd-preprocessing/SKILL.md) | 几何清理、区域命名、网格/y+ 策略与质量审查 | 不包含求解及后处理 |
@@ -19,7 +20,7 @@
 | [qflux-slurm](skills/qflux-slurm/SKILL.md) | 复用目标超算 Slurm 脚本，隔离核数工况、登记作业号并汇总并行耗时 | 辅助工具不提交作业；多节点、GPU 和混合并行需单独适配 |
 <!-- WORKFLOWS:END -->
 
-通用案例优先从 `cfd-case-workflow` 开始；散热风机和轴流风扇使用 `fan-cfd`；吊扇试验室复算使用 `ceiling-fan-cfd`。每个技能的 `SKILL.md` 负责入口和路由，详细方法放在对应 `references/`。
+烘箱供风腔和多排风嘴使用 `oven-fluid-cfd`；通用案例优先从 `cfd-case-workflow` 开始；散热风机和轴流风扇使用 `fan-cfd`；吊扇试验室复算使用 `ceiling-fan-cfd`。每个技能的 `SKILL.md` 负责入口和路由，详细方法放在对应 `references/`。
 
 ## 快速开始
 
