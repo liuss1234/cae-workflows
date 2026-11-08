@@ -4,6 +4,19 @@ All notable repository-level changes are recorded here. Releases follow Semantic
 
 ## Unreleased
 
+### Added
+
+- `tools/install_skills.py` installs any subset of `skills/` into the Codex or DeepSeek Harness skill root, verifies that each `SKILL.md` name matches its directory, and skips existing targets unless `--force` is given.
+
+### Fixed
+
+- Add the missing `metadata.version` to `fan-cfd` so all eight skills declare a version.
+- Replace a lone carriage return in `qflux-liquid-cooling/SKILL.md` that merged `name` and `description` for hosts whose loader only splits on line feeds; repository checks and tests now reject lone CR bytes in skill entry points.
+
+### Changed
+
+- Installation guidance now covers DeepSeek Harness (`DSH_HOME/skills`, default `~/.dsh/skills`) next to Codex in the README and the per-skill installation and portability notes.
+
 ## v1.0.1 - 2026-11-07
 
 ### Changed

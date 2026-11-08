@@ -2,11 +2,12 @@
 
 ## 安装 skill
 
-解压 ZIP，得到 `qflux-liquid-cooling` 文件夹。将整个文件夹放入目标电脑的 Codex 技能目录：
+解压 ZIP，得到 `qflux-liquid-cooling` 文件夹。将整个文件夹放入目标电脑的技能目录：
 
-- Windows：`%USERPROFILE%\.codex\skills\qflux-liquid-cooling`
-- Linux/macOS：`~/.codex/skills/qflux-liquid-cooling`
-- 设置过 CODEX_HOME 时：使用该目录下的 `skills/qflux-liquid-cooling`。
+- Codex，Windows：`%USERPROFILE%\.codex\skills\qflux-liquid-cooling`
+- Codex，Linux/macOS：`~/.codex/skills/qflux-liquid-cooling`；设置过 `CODEX_HOME` 时使用该目录下的 `skills/qflux-liquid-cooling`。
+- DeepSeek Harness，Windows：`%USERPROFILE%\.dsh\skills\qflux-liquid-cooling`
+- DeepSeek Harness，Linux/macOS：`~/.dsh/skills/qflux-liquid-cooling`；设置过 `DSH_HOME` 时使用该目录下的 `skills/qflux-liquid-cooling`。
 
 确认 `SKILL.md` 直接位于技能目录内，避免重复嵌套文件夹。重新打开 Codex 或新建会话后，输入：
 

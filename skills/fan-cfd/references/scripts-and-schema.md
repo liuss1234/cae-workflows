@@ -17,7 +17,7 @@
 | `self_test.py` | 无商业依赖、无客户数据 | 合成逻辑检查，不运行风机仿真 |
 | `create_smoke_case.py` | NumPy、CGNS动态库 → 四区32个六面体的安装案例 | 只检查软件链路，几何为规则方块，不代表风机或叶片层算法 |
 
-复制整个 `fan-cfd/` 到 `~/.codex/skills/` 即可发现 `$fan-cfd`。独立脚本从技能目录执行或传入完整路径；案例可以放任意位置。所有计算路径相对 case 根，`files.qfx/run` 改为新阶段后重新准入、setup/readback。不要手改旧哈希以绕过不一致。
+复制整个 `fan-cfd/` 到 `~/.codex/skills/`（或 `$CODEX_HOME/skills/`）即可发现 `$fan-cfd`；DeepSeek Harness 使用 `~/.dsh/skills/`（或 `$DSH_HOME/skills/`）。独立脚本从技能目录执行或传入完整路径；案例可以放任意位置。所有计算路径相对 case 根，`files.qfx/run` 改为新阶段后重新准入、setup/readback。不要手改旧哈希以绕过不一致。
 
 ## 配置口径
 

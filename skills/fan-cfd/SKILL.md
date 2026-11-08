@@ -1,6 +1,8 @@
 ---
 name: fan-cfd
 description: 完成散热风机、轴流风扇及吊扇的 CFD 几何清理、流体分区、STAR/Gmsh 网格、QFlux 稳态 MRF 配置与计算验收；适用于 CAD 到风量和速度云图交付，以及无边界层、接口或旋向错误、求解发散排查。
+metadata:
+  version: "1.0.0"
 ---
 
 # 风扇行业 CFD

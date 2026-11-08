@@ -31,7 +31,14 @@ python skills/cfd-case-workflow/scripts/init_case.py --directory cases/duct-demo
 
 Windows PowerShell 使用 `.venv-cfd/Scripts/Activate.ps1` 激活环境，Linux 使用 `source .venv-cfd/bin/activate`。案例放入被忽略的 `cases/`；本机 QFlux 路径写入案例自己的 `environment.json`，不提交到仓库。
 
-只安装单个 Codex 技能时，复制对应的 `skills/<名称>/` 到 `%USERPROFILE%/.codex/skills/` 或 `~/.codex/skills/`。保留技能内部的 `scripts/`、`references/`、`assets/` 和 `agents/` 相对结构。
+只安装单个技能时，复制对应的 `skills/<名称>/` 到宿主的技能目录：Codex 使用 `%USERPROFILE%/.codex/skills/`、`~/.codex/skills/` 或 `$CODEX_HOME/skills/`；DeepSeek Harness 使用 `%USERPROFILE%/.dsh/skills/`、`~/.dsh/skills/` 或 `$DSH_HOME/skills/`。保留技能内部的 `scripts/`、`references/`、`assets/` 和 `agents/` 相对结构。
+
+也可以运行安装脚本，脚本会核对 `SKILL.md` 的 `name` 与目录名一致，默认跳过已存在的同名目录：
+
+```text
+python tools/install_skills.py --target codex
+python tools/install_skills.py --target dsh --skill cfd-case-workflow --dry-run
+```
 
 ## 仓库验证
 

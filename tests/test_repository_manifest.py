@@ -23,3 +23,8 @@ def test_registered_cli_entries_exist():
 def test_readme_workflow_table_is_current():
     content = README_PATH.read_text(encoding="utf-8")
     assert content == expected_readme(content, load_workflows())
+
+
+def test_skill_files_have_no_lone_carriage_returns():
+    for path in (REPOSITORY / "skills").glob("*/SKILL.md"):
+        assert b"\r" not in path.read_bytes().replace(b"\r\n", b""), path

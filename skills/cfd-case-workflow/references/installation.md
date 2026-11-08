@@ -5,6 +5,7 @@
 解压后保持 `cfd-case-workflow/SKILL.md`、`scripts/`、`assets/`、`references/` 的相对结构。无需安装其他技能。
 
 - Codex：把整个 `cfd-case-workflow` 文件夹放到本机 `$CODEX_HOME/skills/`；未设置 `CODEX_HOME` 时使用用户目录下 `.codex/skills/`。重载技能或新开会话，调用 `$cfd-case-workflow`。
+- DeepSeek Harness：把整个 `cfd-case-workflow` 文件夹放到本机 `$DSH_HOME/skills/`；未设置 `DSH_HOME` 时使用用户目录下 `.dsh/skills/`。重载技能或新开会话后按技能名加载。
 - 其他智能体：放到该平台规定的本地技能目录；若平台不自动发现技能，要求智能体先完整读取 `SKILL.md`，再按其链接读取当前阶段参考。不要假设不同产品有相同安装目录。
 - 环境配置是每台电脑自己的文件，不包含在通用包中。仅有软件安装仍需核对 API ABI、许可和路径。
 
