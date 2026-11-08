@@ -12,6 +12,7 @@
 | [tecplot-cae](skills/tecplot-cae/SKILL.md) | Tecplot 经验工作流：Fluent 三维数据分开导出、局部切面和局部三维流线 | 面向后处理显示与数据组织；插值和消隐不等于增加物理精度或裁剪原始求解数据 |
 | [oven-fluid-cfd](skills/oven-fluid-cfd/SKILL.md) | 烘箱供风域抽取、保形简化、挡片恢复、STAR切割体层覆盖、QFlux/Slurm诊断及逐出口风量统计 | 供风腔与多排风嘴；附真实失败/未收敛记录，不代替传热、回风全域或精度验证 |
 | [fan-cfd](skills/fan-cfd/SKILL.md) | 风扇行业入口：几何清理、流体分区、STAR/Gmsh 网格、QFlux MRF 计算及风量/云图交付 | 单转子多区多接口适配；具体几何、软件版本及物理有效性需按案例验证 |
+| [cfd-debugging](skills/cfd-debugging/SKILL.md) | CFD 调试经验：求解发散、收敛异常、网格质量与边界条件错误的诊断排查 | 面向已建好网格和工程的数值异常排查；建模、网格和交付阶段由各自技能负责 |
 | [cfd-case-workflow](skills/cfd-case-workflow/SKILL.md) | 通用入口：几何、网格、QFX、VOF/UDF 初始相、求解、场导出、验收和打包 | 自动设置限单流体稳态等温；高级物理按目标软件能力和单独证据适配 |
 | [cfd-preprocessing](skills/cfd-preprocessing/SKILL.md) | 几何清理、区域命名、网格/y+ 策略与质量审查 | 不包含求解及后处理 |
 | [freecad-gmsh-qflux](skills/freecad-gmsh-qflux/SKILL.md) | FreeCAD 到 Gmsh 到米制多区 CGNS，再到 QFlux 回读 | 附七叶风扇 FCStd 和前处理脚本；不启动求解 |

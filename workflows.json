@@ -57,6 +57,12 @@
       "self_test": "scripts/self_test.py"
     },
     {
+      "name": "cfd-debugging",
+      "summary": "CFD 调试经验：求解发散、收敛异常、网格质量与边界条件错误的诊断排查",
+      "boundary": "面向已建好网格和工程的数值异常排查；建模、网格和交付阶段由各自技能负责",
+      "cli_entries": []
+    },
+    {
       "name": "cfd-case-workflow",
       "summary": "通用入口：几何、网格、QFX、VOF/UDF 初始相、求解、场导出、验收和打包",
       "boundary": "自动设置限单流体稳态等温；高级物理按目标软件能力和单独证据适配",
